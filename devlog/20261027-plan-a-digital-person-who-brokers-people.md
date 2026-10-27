@@ -1,0 +1,408 @@
+# 2026-10-27 · Plan: Gertrude, a digital person who brokers people
+
+Point-in-time plan, written for sign-off before any code. Supersedes the empty
+milestones in `20261027-init.md`. Prices and product facts below were read from
+vendor pages on 2026-10-27 and will drift; anything marked *unverified* came from
+one secondary source or could not be confirmed.
+
+## Grounding
+
+**The ask** (Anselm, 2026-10-27, in the gertrude room, quoted in full because it is
+the brief):
+
+> I want to write a digital person service that will connect people to each other. I
+> want to specify this service with you and then write it. It will need to be spun up
+> as an exe.dev instance and we will use anthropic credits for it to start since it
+> will rely heavily on an llm. This idea is inspired by https://www.boardy.ai/ but the
+> goal is to connect ordinary people to each other over complementary interests - not
+> just executives and talent... this is consumer to consumer, to help communities
+> broker relationships, in a sense a kind of gossip network facilitator or social glue.
+>
+> + she will be a digital person, an old lady, with a name like hazel, pearl, dorothy,
+>   lillian or mabel, edith or Gertrude - something that really says 'older'.
+> + the service as a whole will be a brokerage, it will find out peoples needs, attempt
+>   to trace out a social graph of extremely high quality connections between people
+>   and matchmake them over complementary interests
+> + unlike my previous projects she will be proactive, she will be building a list of
+>   high quality people that are connected to each other, seeded by me or other network
+>   anchors (ala avogado).
+> + for fresh contacts she will introduce herself, and ask people what they need. with
+>   permission she will call people back again. she will behind the scenes attempt to
+>   match make people over complementary interests. we should mention a few things on
+>   fresh connections, such as we're mostly wanting to focus on public information, not
+>   private - this is a public service. also the project is open source and open
+>   participation, anybody can help make her better and wiser.
+> + she will primarily be a voice agent, although i think she will need a google meetup
+>   room, and an ability to use sms, and other conventional gateways that a real person
+>   uses. we will also have a web page - we can use attest.monster for authentication.
+> + she has to have a deep conceptual context - for example when i was talking to
+>   boardy we were disconnected a few times, switched between phone, sms and google
+>   zoom - and boardy never lost context; it didn't spin up two separate agents to talk
+>   to me - it was very much like a real person.
+> + we need high quality full duplex voice https://block.xyz/dessa is one solution;
+>   there may be other solutions.
+> + what other criteria are there? you may need to build a list of criteria
+> + how do we break this into milestones and deliverables? what is an mvp?
+> + i have started using nfty.sh/anselm-alerts - we can use that.
+> * lets make a plan, devlog it, and then i will sign off and we can make a prototype
+
+**Agent and session:** Claude Code (Fable 5.1) on servbox, tmux room `gertrude`,
+session https://claude.ai/code/session_018TGCFjehHmLRJQ7VxE3JRW. Three research
+subagents ran in that session (voice stacks; Boardy and prior art; telephony, SMS,
+Meet and US compliance). Their reports are condensed here; the raw transcripts live
+only in the session's scratchpad and are not kept.
+
+**Rests on:** the matchmaker devlogs on the intro object and bounties
+(`~/projects/2027/matchmaker/devlog/20260916-*`, `20261009-*`), attest's identity and
+agent model (`~/projects/2027/attest/devlog/20261007-agents.md`), the harness ntfy
+notes (`harness/private/ntfy.md`), and the sources linked inline.
+
+## 1. What she is
+
+Gertrude is one person with many mouths. People meet her on the phone, by text, on a
+web page, in a call room. Behind every channel is one memory of each person and one
+running conversation with them. She asks people what they need and what they can
+give, keeps a card on each of them that they can read and correct, and when two cards
+fit she asks both sides whether they want to meet. Nothing is sent until both say yes.
+
+She is proactive but not cold. She never dials a stranger. A person reaches her first,
+or a named anchor (Anselm, then others) gives her a name and the person confirms by
+text before she ever rings. Then, with permission, she calls back.
+
+She tells people what she is on every first contact: an AI, run by Anselm as a public
+service, open source, mostly interested in what people are happy to have known.
+
+**Name.** The project is already `gertrude` and the name says old. Recommendation:
+keep Gertrude. The alternatives he listed stay in the persona file as names she might
+mention as sisters or friends, which is cheap colour.
+
+**"ala avogado".** Not identified. The research found nothing matching avogado,
+avocado or Avogadro in a networking sense (Avocado was a 2012 couples app). Anselm to
+say what he meant; it may change how anchors work.
+
+## 2. What was learned
+
+### Boardy (the model to learn from and diverge from)
+
+- Persona "superconnector", no app, no dashboard, no login; an app would "break the
+  magic". Channels now: phone, WhatsApp, iMessage, LinkedIn, X, email, calendar, and it
+  joins Meet, Zoom and Teams. Double opt-in on every intro: "Nothing sends until you
+  do." (https://www.boardy.ai/, https://techcrunch.com/2024/10/24/ai-networking-startup-boardy-raises-3m-pre-seed/)
+- Seeded from the founder's own network, "a few thousand" people at launch; no vouching
+  or referral mechanic found. Free tier capped at three intros a day; Pro $100/month
+  (secondary source). (https://blastra.io/blog/boardy-ai-networking-guide/)
+- Their own numbers (Sep 2026): about 237k people, about 1,500 intros a day, about 20%
+  of intros lead to a meeting both sides found useful; they track attempted, both-yes,
+  met, useful, no-show. (https://www.eomag.io/article/boardy-launching)
+- The continuity Anselm noticed: the team describes an "amorphous" per-person profile
+  carried across channels and says contextual memory and two-sided matching are the
+  hard problems; they accept extra voice latency for depth.
+  (https://consumerstartups.substack.com/p/boardy-your-ai-co-founder)
+- Framing worth copying: Boardy "works for himself", not for the asker, and may
+  decline. Failure worth remembering: the Jan 2025 unsolicited LinkedIn-photo emails
+  and the founder's apology. Voice vendor never disclosed.
+
+### Prior art, in one line each
+
+Lunchclub (a16z, weekly algorithmic video intros) lost retention and pivoted to
+crypto; Shapr (swipe networking) shut in 2023; Intros.ai survived only as a tool for
+community operators and was acquired by Bevy; Donut pairings go stale when prompts are
+ignored; Front Porch Forum (Vermont) is the civic success and runs on slow cadence,
+human moderation and small geography. Pattern: feeds and swipes fail; value survives
+where there is an existing community, a curator with a quality bar, or a real event.
+Weak-tie research (Granovetter; the 2022 LinkedIn experiment in Science) says
+moderately weak ties across circles produce the most movement, not the weakest.
+
+### Voice: the one hard constraint
+
+**Anthropic has no speech or realtime-audio API.** The Claude API takes text, images
+and PDFs (https://platform.claude.com/docs/en/build-with-claude/overview). So the
+brain is Claude over text, and speech is speech-to-text and text-to-speech wrapped
+around it. Every speech-to-speech model is out by the "Anthropic credits" constraint:
+
+- **Dessa (Block)** is a full-duplex speech model announced 2026-10-23, trained on
+  speech alone, no external LLM, no weights, no API, no license, waitlist only, runs
+  on an M4 Max class machine (https://block.xyz/dessa,
+  https://techcrunch.com/2026/10/24/blocks-new-voice-model-sounds-eerily-human/).
+  Watch it; cannot build on it.
+- OpenAI Realtime and Gemini Live: not Claude. Kyutai Unmute/Moshi: open but need a
+  16 to 24 GB GPU and have no telephony. Hume EVI shuts down 2026-11-13.
+
+What remains is a cascade: streaming STT, Claude, streaming TTS, with voice activity
+detection and a turn model handling interruption. Four workable shapes:
+
+| Shape | Who runs the audio | Claude | Phone | Own web room | Cost beyond Claude |
+|---|---|---|---|---|---|
+| Twilio ConversationRelay | Twilio (STT, TTS, barge-in); we get text over a websocket | yes, our code | native | no | $0.07/min + $0.014/min voice |
+| Pipecat (Python, BSD) on our VM | us; Silero VAD + Smart Turn on CPU | first-party Anthropic service | Twilio or Telnyx media streams | yes (Daily or WebRTC) | STT ~$0.005, TTS $0.03–0.08, voice $0.014 /min |
+| LiveKit Agents (Apache-2) + LiveKit Cloud | us (worker) + LiveKit (rooms, SIP) | first-party plugin (Python verified; Node SDK exists, its Anthropic plugin *unverified*) | SIP trunk via Twilio/Telnyx | yes | free 1,000 min then $0.01/min + pieces |
+| Vapi / Retell / ElevenLabs Agents | them | yes, Claude selectable | yes | partly | $0.05–0.08/min platform + pieces |
+
+Sources: https://www.twilio.com/docs/voice/twiml/connect/conversationrelay,
+https://docs.pipecat.ai/server/services/llm/anthropic,
+https://docs.livekit.io/agents/integrations/llm/anthropic/, https://livekit.com/pricing,
+https://vapi.ai/pricing, https://www.retellai.com/pricing, https://elevenlabs.io/pricing/agents.
+
+**No product surveyed carries one conversation across phone, SMS and a meeting.** That
+property is ours to build and is the strongest reason to own the orchestration and the
+transcript rather than rent a platform where the transcript lives in their account.
+
+**The voice itself.** ElevenLabs has officially labelled grandmother voices ("The
+Gentle Matriarch", late 70s; "Grandma Titina"), Voice Design from a text prompt, and
+v3 tags for laughs and sighs (https://elevenlabs.io/voice-library/grandmother). Rime
+Coda has an "Elder" tier (`esther`, `prentiss`) and Mist v3 `pearl`, "wise older
+American voice", at $0.03–0.05/min with 37 ms time to first audio
+(https://docs.rime.ai/docs/voices-coda.md). Inworld TTS-2 has the best breath and
+chuckle control but no age catalogue. Pick by ear, not by description.
+
+### Google Meet
+
+Google's Meet Media API is receive-only, developer preview, and the overview page says
+it is no longer accepting signups (*one fetch; unverified*). The only way to speak in a
+Meet is a headless-browser bot: Recall.ai Output Media ($0.50/recording hour, first
+5 h free), or open-source Attendee or Vexa self-hosted. All fragile. The realistic
+answer is that Gertrude hosts her own room (LiveKit or Daily, both with free tiers)
+and sends the link, and a Meet bot is a later add-on if people insist on Meet.
+
+### Telephony and SMS, as an individual in the US
+
+- Twilio: $0.014/min out, $0.0085 in, $0.0083/SMS, $1.15/month a number; no regulatory
+  bundle for US numbers. Telnyx is roughly half the price per minute but requires
+  identity verification before buying a number. (https://www.twilio.com/en-us/voice/pricing/us,
+  https://telnyx.com/pricing/voice-api)
+- **A2P 10DLC is mandatory for texting from a regular number** and a sole proprietor
+  can register: $4 brand, $15 campaign vetting, $2/month, one number, about 1,000
+  segments a day, two to three business days review. Unregistered texts are blocked
+  and billed. Into the Blue LLC has an EIN, which opens the Low-Volume Standard path
+  (five campaigns, 2,000/day) if he prefers. (https://www.twilio.com/docs/messaging/compliance/a2p-10dlc)
+- iMessage needs an Apple-approved provider and a live human agent; RCS is business
+  vetting with carrier fees; Signal has no bot API. WhatsApp Business is possible
+  (24-hour reply window, templates outside it) but needs a Meta business account.
+  Phone plus SMS plus web is the honest channel set for a start.
+
+### Law, condensed to what we will do
+
+The FCC ruled in Feb 2024 that AI voices are "artificial" under the TCPA, so every call
+she places is a robocall that needs prior consent (https://www.fcc.gov/document/fcc-makes-ai-generated-voices-robocalls-illegal).
+California, Utah, Maine and New York require bot disclosure in various forms; Oregon
+SB 1546 (companion chatbots, effective 2027-01-01, $1,000 statutory damages,
+*signing unverified*) is why she must never be framed as a companion. Recording consent
+is all-party in a dozen states and we cannot know where a callee is. A repeated remark
+about a named neighbour is defamation exposure a small project cannot defend the way
+OpenAI did in Walters.
+
+Rules, each of which becomes code or persona text:
+
+1. Inbound first. Outbound only to a person who gave their number and said yes in
+   writing (web form, "YES" by text, or email); the consent is logged with wording and
+   time.
+2. First sentence of every call and first text of every thread: her name, that she is
+   an AI, who runs her, and a number to call back.
+3. Calls only 08:00–21:00 in the callee's local time, Pacific when unknown.
+4. "Stop", in any wording, on any channel, stops all channels at once and goes on a
+   do-not-contact list kept five years.
+5. No audio recordings. Transcripts only, and she says "I take notes." This also keeps
+   voiceprints, a biometric, out of the system.
+6. Nothing said about a third party is repeated. She will say "Anselm thought you two
+   should talk" only if Anselm said so about himself as the introducer; hearsay about a
+   person never appears in intro text.
+7. Per-person "keep private" list and a one-message delete-everything path; retention
+   measured in weeks for raw transcripts, with the card kept only while the person
+   is active.
+8. Adults only, vouched by the sponsor. No companion framing, ever.
+9. 10DLC registration, STOP and HELP handlers, STIR/SHAKEN A attestation and Free
+   Caller Registry on day one, low steady volume to warm the number.
+
+## 3. Criteria
+
+Beyond the brief, these are the properties the design is judged against. Each has a
+way to check it.
+
+| # | Criterion | How we check |
+|---|---|---|
+| 1 | **Continuity.** One conversation per person across channels; a dropped call resumes by text or callback with no re-introduction | Scripted test: call, hang up mid-sentence, text; she picks up the thread |
+| 2 | **Consent before contact.** No outbound without logged consent; disclosure on every first contact | Consent row required by the dialer; persona test suite |
+| 3 | **Full duplex.** Barge-in within about 300 ms, backchannels ("mm-hm") do not interrupt her, no talking over | Measured on test calls; Anselm's ear |
+| 4 | **Latency.** First audio within about one second of the person stopping | Logged per turn: STT end, first token, first audio |
+| 5 | **Persona constancy.** Same voice, same name, same manner on every channel; never claims to be human | Persona file is the single source; red-team prompts |
+| 6 | **Public by default, said so.** People know what is kept and can see their own card | Web card page with edit and delete; the opening script |
+| 7 | **Intro quality over volume.** Double opt-in, a daily cap per person, measured funnel (proposed, both yes, met, useful) | Admin page counters; a rule whose "useful" rate falls under a floor is switched off |
+| 8 | **Bridging, not clustering.** Prefer intros across circles | Edge source recorded; matcher scores cross-anchor pairs higher |
+| 9 | **Human in the loop at first.** Every outreach plan and every intro is approved by Anselm until the funnel earns autonomy | ntfy push with approve and decline actions; nothing sends without it |
+| 10 | **Open source, open participation.** Persona, matching rules and docs in the public repo; contributions are prompt and rule changes anyone can read | Public repo, MIT like attest (his call) |
+| 11 | **Observability.** Every turn, tool call, cost and consent is in one log Anselm can read from the phone | Admin page behind attest; ntfy for events |
+| 12 | **Cost ceiling.** Known cost per minute and per intro; a monthly cap that stops outbound when hit | Ledger table like matchmaker's `llm_calls`; cap in config |
+| 13 | **Graceful failure.** Carrier down, model slow, STT garbage: she says so briefly and offers text | Chaos tests on the pipeline |
+| 14 | **Abuse resistance.** People using her to harvest others' details, to prank-call, or to impersonate | Third-party rule above; per-caller rate limits; anchors can be revoked |
+| 15 | **Identity resolution.** Phone, SMS, web (attest) and room link resolve to one person without a login | Binding flow: she texts a code; attest DID bound to the number |
+| 16 | **Portability.** Store and channels behind interfaces so Twilio, the TTS vendor or the model can be swapped | House modular policy; one `store` module; channel adapters |
+
+## 4. Architecture
+
+Modular per house policy: small ES modules, formal interfaces, one store.
+
+```
+                phone (Twilio voice)   SMS (Twilio)   web room (LiveKit, M4)   web card (attest)
+                        │                  │                   │                    │
+                 ┌──────┴──────────────────┴───────────────────┴────────────────────┴──────┐
+                 │                 channel adapters  →  events on the bus                  │
+                 │   {person, channel, direction, text, ts, meta}   (orbital bus pattern)  │
+                 └──────────────────────────────┬───────────────────────────────────────────┘
+                                                │
+        ┌────────────────────┐        ┌─────────┴──────────┐         ┌──────────────────────┐
+        │  talker (live)     │◄──────►│  conversation store │◄───────►│  thinker (offline)   │
+        │  per-turn Claude   │        │  one log per person │         │  after each contact: │
+        │  call, streamed,   │        │  + card + consent   │         │  update card, extract│
+        │  persona + card    │        │  + edges + intros   │         │  needs/offers, match,│
+        │  + recent log      │        │  (SQLite, 1 module) │         │  plan outreach       │
+        └────────────────────┘        └─────────┬──────────┘         └──────────┬───────────┘
+                                                │                               │
+                                      ┌─────────┴──────────┐          ┌─────────┴───────────┐
+                                      │  web: card, admin  │          │  approvals: ntfy    │
+                                      │  (Fastify+socket.io│          │  push with actions  │
+                                      │   attest sign-in)  │          │  → Anselm's phone   │
+                                      └────────────────────┘          └─────────────────────┘
+```
+
+**The continuity trick.** The voice session is ephemeral; the conversation is not.
+Every utterance on every channel is appended to one log per person. The talker's
+Claude context is assembled fresh on each turn from the persona, the person's card,
+open threads (an unanswered question, a pending intro) and the tail of the log,
+regardless of which channel the turn came in on. When a call drops she notices the
+hangup event, and if the consent allows she texts: "We got cut off. Call me back, or
+just answer here." The next message, on either channel, continues the same log. That
+is what Boardy felt like and it costs nothing but discipline about where state lives.
+
+**Two brains.** The talker runs on every turn and must be fast: Claude Sonnet 5.5
+(`claude-sonnet-5-5`, $2/$10 per million tokens) with prompt caching on the persona
+and card, effort low; Haiku 5.5 (`claude-haiku-5-5`, $0.10/$0.50) is the fallback if
+Sonnet's first token is too slow on the phone, measured not assumed. The thinker runs
+after each contact and nightly, and can be slow and careful: Claude Opus 5.5
+(`claude-opus-5-5`, $4/$20). It rewrites the card with quotes as provenance, extracts
+needs and offers, scores pairs, drafts intro blurbs for each side, and proposes the
+next outreach. Server-side fallbacks on for refusals.
+
+**Identity.** The phone number is the key for voice and SMS. The web card signs in
+through attest (passkey, the matchmaker pattern) and is bound to the number by a code
+she texts. A room link carries a per-person token. One `person` row, many
+`identities`.
+
+**Proactivity with a leash.** The thinker writes an outreach plan (who, why, when, what
+she will open with). The plan goes to Anselm as an ntfy push with Approve and Decline
+actions (ntfy supports up to three action buttons on a message; the public topic is
+guessable, so the topic gets a random suffix as the harness note already suggests, and
+approve links carry a signed one-time token). Approved plans are dialed inside quiet
+hours. Intros work the same way: both parties' yes, then Anselm's, then she sends.
+Autonomy is granted per rule when its measured funnel earns it.
+
+**Data model** (store module, SQLite via `node:sqlite` as in attest):
+
+- `person` {id, name, created, anchor_id, status}
+- `identity` {person, kind: phone|email|attest_did|room_token, value, verified_at}
+- `consent` {person, kind: call_back|text|share_card|public, wording, channel, at, revoked_at}
+- `event` {person, channel, direction, text, ts, meta} — the one log
+- `card` {person, needs[], offers[], interests[], facts[{text, quote, public}], updated}
+- `edge` {a, b, how, strength, source} — who knows whom, from what evidence
+- `intro` {a, b, blurb_a, blurb_b, state: proposed|a_yes|b_yes|approved|sent|met|useful|declined, by, at} — matchmaker's intro states, extended with the operator approval
+- `plan` {person, kind: first_call|call_back|intro_ask, reason, window, state, approved_by}
+- `dnc` {value, kind, at, wording}
+- `llm_call` {at, model, tokens_in, cached, tokens_out, cost, purpose}
+
+**Relationship to matchmaker and attest.** Attest is sign-in and, later, vouches
+(anchors vouching people is exactly a vouch record). Matchmaker already has an intro
+object with soft settlement and bounties; Gertrude adopts its states and vocabulary so
+the two can share records later, but keeps her own store now. Whether she is a new
+front door to matchmaker's brokerage or a sibling with its own graph is his call; the
+plan assumes sibling.
+
+**Stack.** Node ES modules, Fastify, socket.io for the browser, SQLite, one exe.dev VM
+(`gertrude`), systemd units for web and thinker, deploy by `deploy/deploy.sh` (push is
+not deploy). Secrets in `/etc/gertrude.env` on the VM and in the harness private notes.
+
+**Voice shape for the MVP: Twilio ConversationRelay.** Twilio does STT, TTS and
+barge-in and hands us text over one websocket; we stream Claude's tokens back. It is
+the least audio code, it is Node-native, ElevenLabs voices are allowed in it, and it
+leaves the transcript with us. Open questions it must answer in a one-day spike
+(M1): whether $0.07/min includes STT and TTS (*unverified*), how good its ElevenLabs
+voice path sounds, and whether interruption feels natural. If the spike disappoints,
+the fallback is Pipecat as a separate Python voice process on the same VM talking to
+the Node brain over a local socket; the talker, store and adapters are unchanged by
+that swap, which is the point of the adapter boundary. LiveKit comes in at M4 for the
+web room and would then also carry SIP, at which point ConversationRelay can be
+retired if LiveKit's turn handling is as good.
+
+**Cost per voice minute, estimated, not measured:** Twilio voice $0.014 +
+ConversationRelay $0.07 + Claude Sonnet with caching roughly $0.02 at about six turns a
+minute ≈ $0.10/min. A ten-minute call about $1; a hundred such calls a month about
+$100 plus $25 fixed (number, 10DLC, VM). The thinker's Opus passes are pennies per
+person per day. A monthly cap in config stops outbound when hit.
+
+## 5. Milestones and the MVP
+
+Each milestone ends with something Anselm can try from his phone and a devlog entry
+with what was measured. Nothing goes live to anyone but him before M3 is signed off.
+
+**M0 · This plan.** Sign-off on: the name, the voice shape, inbound-first consent,
+transcripts-only, the sibling relationship to matchmaker, the licence. Decide
+"avogado".
+
+**M1 · She has a voice** (the spike; a few days). A Twilio number; inbound call →
+ConversationRelay → Node websocket → Claude Sonnet 5.5 → her voice. Persona v1 in the
+repo. Transcript stored per call. ntfy ping when she gets a call. Deliverable: Anselm
+calls her, talks for five minutes, gets interrupted and interrupts her, and reports
+whether she feels like a person. Latency per turn logged. Go/no-go on ConversationRelay.
+
+**M2 · She remembers** (a week). Person, identity, consent and event tables; SMS on the
+same number with STOP and HELP (10DLC sole-prop registration filed in week one, since
+review takes days); the thinker's first job, rewriting the card after each contact;
+the web card page behind attest sign-in with edit and delete; the dropped-call
+recovery text; callback with permission (outbound to Anselm only). Deliverable: the
+continuity test in criterion 1 passes; Anselm reads his own card and corrects it.
+
+**M3 · She brokers** (two weeks). Anchors and sponsorship: Anselm gives her five to
+ten names with numbers; she texts each for consent before any call; first-contact
+script with the AI, public-service and open-source disclosures; needs, offers and
+edges extracted into cards; the matcher proposes pairs with a blurb for each side;
+double opt-in by text or call; Anselm approves outreach plans and intros from ntfy;
+the funnel counters on the admin page; daily cap; monthly cost cap. Deliverable: at
+least three real intros among his friends, each with an outcome recorded.
+
+**This is the MVP: M1 through M3.** A phone-and-text Gertrude who remembers everyone
+she has spoken to, carries a conversation across a dropped call, brokers consented
+intros among a seed group, and does nothing outbound without Anselm's thumb.
+
+**M4 · She is in the room** (a week). Her own LiveKit room with a per-person link;
+"shall we switch to video?" mid-call hands off without losing the thread; a Meet bot
+(Recall.ai or self-hosted Attendee) only if the seed group asks for Meet by name.
+
+**M5 · Open participation.** Public repo tidy, README that explains her, persona and
+matching rules editable by pull request, a second anchor who is not Anselm, a small
+geography (his neighbourhood or one community) as the first bounded deployment, and
+the funnel published on the site.
+
+Not in any milestone yet: WhatsApp, email as a channel, payments or bounties,
+multi-language, a second persona.
+
+## 6. Open questions for Anselm
+
+1. What is "avogado"?
+2. Gertrude as the name, yes or no?
+3. Twilio (simpler, pricier) or Telnyx (cheaper, identity check first)? Plan assumes
+   Twilio for M1 because ConversationRelay is Twilio-only.
+4. Register 10DLC as a sole proprietor or under Into the Blue LLC?
+5. Transcripts only, no audio, as the standing rule?
+6. Sibling of matchmaker with its own store, or a voice front door to matchmaker?
+7. MIT licence and the `anselm` org, or `orbitalfoundation` like attest?
+8. Who are the first five names?
+
+## 7. Dead ends worth keeping
+
+- Dessa looked like the answer and is a model with no door: no weights, no API, no
+  LLM in the loop. Speech-to-speech models in general trade away the thing this
+  project needs most, a brain we choose and a transcript we own.
+- Joining Google Meet properly is not possible through Google; it is a browser bot or
+  nothing. Hosting her own room is cheaper, more reliable and still "a video call".
+- Hume EVI would have been a tidy answer for warmth and is being shut down in
+  seventeen days.
+- iMessage and Signal are closed to bots; the "conventional gateways a real person
+  uses" reduce, for an individual operator, to phone, SMS, email and web.

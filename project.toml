@@ -5,4 +5,4 @@ code = "local"
 deploy = "none"
 status = "active"        # active | parked (struck through on the dashboard) | archived (hidden)
 autodeploy = false
-notes = ""
+notes = "digital person (old lady) who brokers intros by phone/SMS; plan 2026-10-27, awaiting sign-off"
