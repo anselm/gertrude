@@ -1,6 +1,6 @@
 name = "gertrude"
 horizon = "2026"
-repo = ""
+repo = "anselm/gertrude"
 code = "local"
 deploy = "none"
 status = "active"        # active | parked (struck through on the dashboard) | archived (hidden)
