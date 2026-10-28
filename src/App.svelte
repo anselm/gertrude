@@ -4,9 +4,17 @@
   refresh();
   let v = $state(null); fetch("/version.json").then((r) => (r.ok ? r.json() : null)).then((j) => (v = j)).catch(() => {});
   const page = $derived(route.path === "/card" ? Card : route.path === "/about" ? About : route.path === "/admin" ? Admin : Talk);
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }).toUpperCase();
 </script>
-<div class="fixed top-3 left-4 z-20 flex items-baseline gap-2"><a href="/" class="wordmark text-[22px] text-brand no-underline">Gertrude</a>{#if v?.sha}<span class="num text-[10px] text-dim" title={"built " + (v.at || "")}>{v.sha.slice(0, 7)}</span>{/if}</div>
+<!-- the masthead: a Unigrid-style title band, then the four-stripe rule -->
+<header class="band">
+  <div class="mx-auto flex max-w-3xl items-baseline justify-between px-4 py-2">
+    <a href="/" class="display text-[26px] no-underline" style="color: var(--color-paper)">Gertrude</a>
+    <span class="type text-[10px] tracking-[0.12em] uppercase opacity-80">she connects people · {today}{#if v?.sha} · {v.sha.slice(0, 7)}{/if}</span>
+  </div>
+</header>
+<div class="stripes"></div>
 <Menu />
-<main class="mx-auto max-w-2xl px-4 pt-14 pb-8">
+<main class="mx-auto max-w-3xl px-4 pt-4 pb-8">
   {#key route.path}<svelte:component this={page} />{/key}
 </main>

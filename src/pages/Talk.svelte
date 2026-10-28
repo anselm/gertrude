@@ -15,27 +15,26 @@
 </script>
 {#if demo}
   <div class="flex flex-col pb-8">
+    <p class="head mb-2">Sample transcript · not a real person</p>
     {#each DEMO as e, i (e.id)}
-      {#if i === 0 || DEMO[i - 1].dir !== e.dir}<div class="rule mt-2"></div>{/if}
-      <div class="line {e.dir === 'in' ? 'me' : 'her'}"><span class="who">{e.dir === "in" ? "you" : "Gertrude"}</span>{e.text}</div>
+      <div class="card {e.dir === 'in' ? 'me' : 'her'} mb-3"><span class="stamp">{when(e.ts)}</span><div class="who">{e.dir === "in" ? "You" : "Gertrude"}</div><div class="text">{e.text}</div><span class="no">No. {i + 1}</span></div>
     {/each}
-    <p class="mt-6 text-sm text-dim">A sample. <a class="text-brand" href="/">Sign in</a> to talk to her yourself.</p>
+    <p class="type mt-4 text-[13px] text-dim">☞ <a class="text-brand" href="/">Sign in</a> to talk to her yourself.</p>
   </div>
-{:else if !session.loaded}<p class="pt-10 text-sm text-dim">one moment…</p>
+{:else if !session.loaded}<p class="type pt-6 text-[13px] text-dim">one moment…</p>
 {:else if !session.user}<SignIn />
 {:else}
   <div class="flex flex-col pb-28">
     {#each events as e, i (e.id)}
-      {#if i === 0 || events[i - 1].dir !== e.dir}<div class="rule mt-2"></div>{/if}
-      <div class="line {e.dir === 'in' ? 'me' : 'her'}" title={when(e.ts) + (e.channel !== "web" ? " · " + e.channel : "")}><span class="who">{e.dir === "in" ? (session.user.name || "you") : "Gertrude"}</span>{e.text}</div>
+      <div class="card {e.dir === 'in' ? 'me' : 'her'} mb-3"><span class="stamp">{when(e.ts)}{e.channel !== "web" ? " · " + e.channel : ""}</span><div class="who">{e.dir === "in" ? (session.user.name || "You") : "Gertrude"}</div><div class="text">{e.text}</div><span class="no">No. {i + 1}</span></div>
     {/each}
-    {#if live}<div class="rule mt-2"></div><div class="line her"><span class="who">Gertrude</span>{live}</div>{:else if busy}<div class="rule mt-2"></div><div class="line her text-dim"><span class="who">Gertrude</span>…</div>{/if}
-    {#if err}<p class="text-sm text-brand" role="alert">{err}</p>{/if}
+    {#if live}<div class="card her mb-3"><div class="who">Gertrude</div><div class="text">{live}</div></div>{:else if busy}<div class="card her mb-3"><div class="who">Gertrude</div><div class="text text-dim">…</div></div>{/if}
+    {#if err}<p class="type text-[13px] text-brand" role="alert">✗ {err}</p>{/if}
   </div>
-  <form class="fixed inset-x-0 bottom-0 z-20 bg-paper px-4 rule-double pb-[max(env(safe-area-inset-bottom),12px)] pt-2" onsubmit={(e) => { e.preventDefault(); send(); }}>
-    <div class="mx-auto flex max-w-2xl items-end gap-2">
-      <textarea bind:this={box} bind:value={text} onkeydown={key} rows="1" placeholder="say something to Gertrude" class="min-h-[40px] max-h-40 flex-1 resize-none" aria-label="your message"></textarea>
-      <button class="btn primary h-10" disabled={busy || !text.trim()} aria-label="send">send</button>
+  <form class="fixed inset-x-0 bottom-0 z-20 bg-paper px-4 double pb-[max(env(safe-area-inset-bottom),12px)] pt-2" onsubmit={(e) => { e.preventDefault(); send(); }}>
+    <div class="mx-auto flex max-w-3xl items-end gap-2 pr-12 md:pr-0">
+      <textarea bind:this={box} bind:value={text} onkeydown={key} rows="1" placeholder="say something to Gertrude" class="min-h-[38px] max-h-40 flex-1 resize-none" aria-label="your message"></textarea>
+      <button class="btn primary h-[38px]" disabled={busy || !text.trim()} aria-label="send">Send</button>
     </div>
   </form>
 {/if}
