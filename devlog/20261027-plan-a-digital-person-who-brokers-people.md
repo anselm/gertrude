@@ -1,6 +1,9 @@
 # 2026-10-27 · Plan: Gertrude, a digital person who brokers people
 
-Point-in-time plan, written for sign-off before any code. Supersedes the empty
+Point-in-time plan, written for sign-off before any code. Revised the same evening
+after Anselm said Twilio had been "extremely challenging" to integrate for the
+litahotel.com concierge, where he ended up plugging an ordinary Android phone into the
+network; the voice and SMS shapes below now keep Twilio off the critical path. Supersedes the empty
 milestones in `20261027-init.md`. Prices and product facts below were read from
 vendor pages on 2026-10-27 and will drift; anything marked *unverified* came from
 one secondary source or could not be confirmed.
@@ -133,7 +136,7 @@ detection and a turn model handling interruption. Four workable shapes:
 
 | Shape | Who runs the audio | Claude | Phone | Own web room | Cost beyond Claude |
 |---|---|---|---|---|---|
-| Twilio ConversationRelay | Twilio (STT, TTS, barge-in); we get text over a websocket | yes, our code | native | no | $0.07/min + $0.014/min voice |
+| Twilio ConversationRelay | Twilio (STT, TTS, barge-in); we get text over a websocket | yes, our code | native | no | $0.07/min + $0.014/min voice (dropped after his Twilio experience) |
 | Pipecat (Python, BSD) on our VM | us; Silero VAD + Smart Turn on CPU | first-party Anthropic service | Twilio or Telnyx media streams | yes (Daily or WebRTC) | STT ~$0.005, TTS $0.03–0.08, voice $0.014 /min |
 | LiveKit Agents (Apache-2) + LiveKit Cloud | us (worker) + LiveKit (rooms, SIP) | first-party plugin (Python verified; Node SDK exists, its Anthropic plugin *unverified*) | SIP trunk via Twilio/Telnyx | yes | free 1,000 min then $0.01/min + pieces |
 | Vapi / Retell / ElevenLabs Agents | them | yes, Claude selectable | yes | partly | $0.05–0.08/min platform + pieces |
@@ -170,11 +173,15 @@ and sends the link, and a Meet bot is a later add-on if people insist on Meet.
   bundle for US numbers. Telnyx is roughly half the price per minute but requires
   identity verification before buying a number. (https://www.twilio.com/en-us/voice/pricing/us,
   https://telnyx.com/pricing/voice-api)
-- **A2P 10DLC is mandatory for texting from a regular number** and a sole proprietor
-  can register: $4 brand, $15 campaign vetting, $2/month, one number, about 1,000
-  segments a day, two to three business days review. Unregistered texts are blocked
-  and billed. Into the Blue LLC has an EIN, which opens the Low-Volume Standard path
-  (five campaigns, 2,000/day) if he prefers. (https://www.twilio.com/docs/messaging/compliance/a2p-10dlc)
+- **A2P 10DLC is mandatory for texting from a carrier-API number** and a sole
+  proprietor can register: $4 brand, $15 campaign vetting, $2/month, one number, about
+  1,000 segments a day, two to three business days review. Unregistered texts are
+  blocked and billed. (https://www.twilio.com/docs/messaging/compliance/a2p-10dlc)
+  A real SIM in a real phone is outside 10DLC entirely, which is why the plan now texts
+  from an Android phone (see Architecture). Note that her voice number (LiveKit) and
+  her text number (the SIM) will differ unless the SIM's number is ported or forwarded;
+  she simply tells people "call me on this one, text me on that one", which is what a
+  person with a landline and a mobile does.
 - iMessage needs an Apple-approved provider and a live human agent; RCS is business
   vetting with carrier fees; Signal has no bot API. WhatsApp Business is possible
   (24-hour reply window, templates outside it) but needs a Meta business account.
@@ -319,23 +326,55 @@ plan assumes sibling.
 (`gertrude`), systemd units for web and thinker, deploy by `deploy/deploy.sh` (push is
 not deploy). Secrets in `/etc/gertrude.env` on the VM and in the harness private notes.
 
-**Voice shape for the MVP: Twilio ConversationRelay.** Twilio does STT, TTS and
-barge-in and hands us text over one websocket; we stream Claude's tokens back. It is
-the least audio code, it is Node-native, ElevenLabs voices are allowed in it, and it
-leaves the transcript with us. Open questions it must answer in a one-day spike
-(M1): whether $0.07/min includes STT and TTS (*unverified*), how good its ElevenLabs
-voice path sounds, and whether interruption feels natural. If the spike disappoints,
-the fallback is Pipecat as a separate Python voice process on the same VM talking to
-the Node brain over a local socket; the talker, store and adapters are unchanged by
-that swap, which is the point of the adapter boundary. LiveKit comes in at M4 for the
-web room and would then also carry SIP, at which point ConversationRelay can be
-retired if LiveKit's turn handling is as good.
+**Voice shape for the MVP: LiveKit Agents, Node, on our VM, with LiveKit Cloud for
+rooms and the phone number.** The first draft of this plan put Twilio on the critical
+path twice (ConversationRelay for voice, 10DLC for SMS). Anselm's litahotel.com
+experience says no. LiveKit removes Twilio entirely:
 
-**Cost per voice minute, estimated, not measured:** Twilio voice $0.014 +
-ConversationRelay $0.07 + Claude Sonnet with caching roughly $0.02 at about six turns a
-minute ≈ $0.10/min. A ten-minute call about $1; a hundred such calls a month about
-$100 plus $25 fixed (number, 10DLC, VM). The thinker's Opus passes are pennies per
-person per day. A monthly cap in config stops outbound when hit.
+- `@livekit/agents` with `@livekit/agents-plugin-anthropic` is a real Node package
+  (docs show `new anthropic.LLM({model})` inside a `voice.AgentSession`,
+  https://docs.livekit.io/agents/models/llm/anthropic/). STT and TTS are plugins
+  (Deepgram, ElevenLabs, Rime, Cartesia); Silero VAD and the `v1-mini` turn detector
+  run on CPU.
+- LiveKit Cloud's free Build plan includes one US local phone number with 50 inbound
+  minutes, 1,000 third-party SIP minutes and 1,000 agent-session minutes; paid tiers
+  are $0.01/agent-minute and $0.004/SIP-minute (https://livekit.com/pricing, read
+  2026-10-27). So M1 needs no carrier account at all. When volume grows, a SIP trunk
+  from Telnyx or voip.ms plugs into the same inbound trunk config; still no Twilio.
+- The same worker serves the browser room, so M4's "her own room" is the same code
+  with a different participant, not a second stack.
+- The worker is one Node process on the exe.dev VM; LiveKit's own sizing note is
+  about 3.8 cores and 2.8 GB for 30 concurrent sessions, so a handful is fine.
+
+Caveats, to be settled by the M1 spike: LiveKit's better turn model runs only on their
+inference service (the CPU `v1-mini` may be good enough); self-hosting the SIP part
+alongside LiveKit Cloud is unsupported per their community, so phone comes through
+their cloud SIP, which is fine at this scale; the Node SDK lags the Python one, and if
+a plugin we need is Python-only the voice worker becomes a Python process beside the
+Node brain, with the talker, store and adapters unchanged. Pipecat stays the second
+fallback. Twilio ConversationRelay is now the last resort, not the plan.
+
+**The Android phone, considered properly.** For SMS it is the right tool: capcom6's
+SMS Gateway for Android (Apache 2.0, https://github.com/capcom6/android-sms-gateway)
+turns a phone with a SIM into an HTTP API with webhooks, and its "private server" mode
+lets the phone connect out to a server we run on the gertrude VM, so the phone can sit
+on his network. A consumer SIM texting at human volume is person-to-person traffic:
+no 10DLC brand, no campaign vetting, no carrier review. The cost is the phone, a
+prepaid SIM, a charger that never gets unplugged, and the risk that a carrier throttles
+a SIM that texts hundreds of strangers, which at Gertrude's intended cadence should
+not happen. For voice it is the wrong tool: since 2022 Google Play forbids third-party
+apps capturing call audio and Android gives no API for it, so an Android phone can
+only carry her voice by speakerphone and a cable or a rooted dialer. A SIM in a GoIP
+box or a Quectel modem has the same problem in 2026 form: US 2G/3G is gone and VoLTE
+through those devices is reported flaky. Voice goes through SIP; texts can go through
+the phone.
+
+**Cost per voice minute, estimated, not measured:** LiveKit agent session $0.01 +
+Claude Sonnet with caching roughly $0.02 at about six turns a minute + Deepgram STT
+about $0.005 + TTS $0.03–0.08 ≈ $0.07–0.12/min once past the free tier, nothing on
+the phone leg at first. A ten-minute call about $1; a hundred such calls a month about
+$100 plus the VM. SMS through the phone costs the SIM plan. The thinker's Opus passes
+are pennies per person per day. A monthly cap in config stops outbound when hit.
 
 ## 5. Milestones and the MVP
 
@@ -346,15 +385,17 @@ with what was measured. Nothing goes live to anyone but him before M3 is signed 
 transcripts-only, the sibling relationship to matchmaker, the licence. Decide
 "avogado".
 
-**M1 · She has a voice** (the spike; a few days). A Twilio number; inbound call →
-ConversationRelay → Node websocket → Claude Sonnet 5.5 → her voice. Persona v1 in the
-repo. Transcript stored per call. ntfy ping when she gets a call. Deliverable: Anselm
-calls her, talks for five minutes, gets interrupted and interrupts her, and reports
-whether she feels like a person. Latency per turn logged. Go/no-go on ConversationRelay.
+**M1 · She has a voice** (the spike; a few days). LiveKit Cloud project with its free
+US number; a Node agent worker on the VM: Deepgram STT → Claude Sonnet 5.5 → an
+old-lady TTS voice, Silero VAD and the CPU turn detector. Persona v1 in the repo.
+Transcript stored per call. ntfy ping when she gets a call. A browser link to the same
+agent, since the room comes free with the stack. Deliverable: Anselm calls her, talks
+for five minutes, gets interrupted and interrupts her, and reports whether she feels
+like a person. Latency per turn logged. Go/no-go on LiveKit's turn handling.
 
-**M2 · She remembers** (a week). Person, identity, consent and event tables; SMS on the
-same number with STOP and HELP (10DLC sole-prop registration filed in week one, since
-review takes days); the thinker's first job, rewriting the card after each contact;
+**M2 · She remembers** (a week). Person, identity, consent and event tables; SMS
+through an Android phone running SMS Gateway for Android in private-server mode, with
+STOP and HELP handled in our code; the thinker's first job, rewriting the card after each contact;
 the web card page behind attest sign-in with edit and delete; the dropped-call
 recovery text; callback with permission (outbound to Anselm only). Deliverable: the
 continuity test in criterion 1 passes; Anselm reads his own card and corrects it.
@@ -371,8 +412,9 @@ least three real intros among his friends, each with an outcome recorded.
 she has spoken to, carries a conversation across a dropped call, brokers consented
 intros among a seed group, and does nothing outbound without Anselm's thumb.
 
-**M4 · She is in the room** (a week). Her own LiveKit room with a per-person link;
-"shall we switch to video?" mid-call hands off without losing the thread; a Meet bot
+**M4 · She is in the room** (a week). The browser room from M1 made real: a per-person
+link, camera optional; "shall we switch to video?" mid-call hands off without losing
+the thread; a Meet bot
 (Recall.ai or self-hosted Attendee) only if the seed group asks for Meet by name.
 
 **M5 · Open participation.** Public repo tidy, README that explains her, persona and
@@ -387,9 +429,10 @@ multi-language, a second persona.
 
 1. What is "avogado"?
 2. Gertrude as the name, yes or no?
-3. Twilio (simpler, pricier) or Telnyx (cheaper, identity check first)? Plan assumes
-   Twilio for M1 because ConversationRelay is Twilio-only.
-4. Register 10DLC as a sole proprietor or under Into the Blue LLC?
+3. What exactly did the Android phone do at litahotel.com: texts only, or voice too,
+   and how? Is that phone, or another old Android with a SIM, available for Gertrude?
+4. Later, when the free LiveKit number is not enough: Telnyx or voip.ms as the SIP
+   trunk? Nothing to decide now.
 5. Transcripts only, no audio, as the standing rule?
 6. Sibling of matchmaker with its own store, or a voice front door to matchmaker?
 7. MIT licence and the `anselm` org, or `orbitalfoundation` like attest?
@@ -404,5 +447,9 @@ multi-language, a second persona.
   nothing. Hosting her own room is cheaper, more reliable and still "a video call".
 - Hume EVI would have been a tidy answer for warmth and is being shut down in
   seventeen days.
+- Twilio ConversationRelay was the first draft's voice shape: least audio code, but
+  Twilio webhooks, TwiML and Trust Hub are exactly the maze Anselm hit at litahotel.com,
+  and 10DLC would have put Twilio under SMS as well. LiveKit gives a number for free
+  and texts go through a phone.
 - iMessage and Signal are closed to bots; the "conventional gateways a real person
   uses" reduce, for an individual operator, to phone, SMS, email and web.
