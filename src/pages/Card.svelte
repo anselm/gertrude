@@ -1,5 +1,14 @@
 <script>
-  import { session } from "../lib/session.svelte.js"; import { rpc, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte";
+  import { session } from "../lib/session.svelte.js"; import { rpc, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte"; import * as push from "../lib/push.js"; import Install from "../lib/Install.svelte";
+  let channels = $state([]), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]);
+  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; placeName = j.place; myNudges = j.nudges; } catch {} }
+  async function pushOn() { reach = "asking…"; try { await push.enable(); reach = "on"; await loadChannels(); } catch (e) { reach = e.message; } }
+  async function pushOff(id) { reach = ""; try { await push.disable(id); await loadChannels(); } catch (e) { reach = e.message; } }
+  async function ntfyOn() { reach = ""; try { await rpc("channel.add", { kind: "ntfy", address: { topic: topic.trim() }, label: "ntfy" }); topic = ""; await loadChannels(); } catch (e) { reach = e.message; } }
+  async function dropChannel(id) { try { await rpc("channel.remove", { id }); await loadChannels(); } catch (e) { reach = e.message; } }
+  async function testReach() { reach = "sending a test…"; try { await rpc("channel.test"); reach = "sent; did it arrive?"; } catch (e) { reach = e.message; } }
+  function sharePlace() { if (!navigator.geolocation) { reach = "no location on this browser"; return; } reach = "asking for your location…"; navigator.geolocation.getCurrentPosition(async (pos) => { try { const j = await rpc("place.set", { lat: pos.coords.latitude, lon: pos.coords.longitude, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }); placeName = j.place; reach = ""; } catch (e) { reach = e.message; } }, (e) => (reach = "location: " + e.message), { maximumAge: 600000, timeout: 15000 }); }
+  async function forgetPlace() { try { await rpc("place.clear"); placeName = ""; } catch (e) { reach = e.message; } }
   let card = $state(null), consents = $state([]), person = $state(null), err = $state(""), busy = $state(""), name = $state(""), edit = $state(false), draft = $state(""), leads = $state([]), edges = $state([]), newName = $state(""), copied = $state(""), shown = $state("");
   async function load() { try { const j = await rpc("card.get"); card = j.card; consents = j.consents; person = j.person; name = j.person.name || ""; err = ""; const l = await rpc("leads.list"); leads = l.leads; edges = l.edges; } catch (e) { err = e.message; } }
   async function copy(link, id) { try { await navigator.clipboard.writeText(link); copied = id; setTimeout(() => (copied = ""), 1500); } catch { prompt("copy this link", link); } }
@@ -7,7 +16,7 @@
   const note = (l) => `${l.name}, this is ${person?.name || "a friend"}. There's a digital person called Gertrude who connects people in Portland; I told her you ought to talk. She's a program, she keeps notes you can read and delete, and she'll only know I sent you. Say hello: ${l.link}`;
   async function send(l) { if (navigator.share) { try { await navigator.share({ text: note(l) }); return; } catch (e) { if (e?.name === "AbortError") return; } } copy(note(l), l.id); }
   async function invite() { const n = newName.trim(); if (!n) return; busy = "invite"; try { await rpc("invite.make", { name: n, about: "" }); newName = ""; await load(); } catch (e) { err = e.message; } busy = ""; }
-  $effect(() => { if (session.user) load(); });
+  $effect(() => { if (session.user) { load(); loadChannels(); } });
   const lists = [["needs", "What you could use"], ["offers", "What you can give"], ["interests", "What you care about"], ["people_in_kind", "Who you would like to meet"], ["open_threads", "What she means to come back to"]];
   async function saveName() { busy = "name"; try { await rpc("me.setName", { name }); session.user = { ...session.user, name }; } catch (e) { err = e.message; } busy = ""; }
   async function rethink() { busy = "think"; try { card = (await rpc("card.rethink", {}, 180000)).card; } catch (e) { err = e.message; } busy = ""; }
@@ -52,6 +61,22 @@
     <p class="body mt-2 text-dim">Each is a note with a one-time link, for you to send on yourself by text, Discord, email, whatever you use. She never contacts anyone first. When they arrive they hear that you sent them, nothing else.</p>
     {#if leads.length}<table class="type mt-2 w-full text-[13px]"><tbody>{#each leads as l}<tr class="hair"><td class="py-1 pr-2">{l.name}</td><td class="text-dim text-[11px] pr-2">{l.about}</td><td class="text-right whitespace-nowrap align-top py-1">{#if l.arrived}<span class="chip" style="color: var(--color-avocado); border-color: var(--color-avocado)">✓ arrived</span>{:else if l.link}<button class="chip" style="color: var(--color-brand); border-color: var(--color-brand)" onclick={() => send(l)}>☞ send</button> <button class="chip" onclick={() => copy(note(l), l.id)}>{copied === l.id ? "copied" : "copy note"}</button> <button class="chip" onclick={() => (shown = shown === l.id ? "" : l.id)}>{shown === l.id ? "hide" : "show"}</button>{:else}<span class="chip">noted</span>{/if}</td></tr>{#if shown === l.id && l.link}<tr><td colspan="3" class="pb-2"><div class="card !pb-2 !pt-1 select-all text-[13px] leading-6" style="border-top-color: var(--color-gold)">{note(l)}</div><p class="type text-[10px] text-dim mt-1">Select it and paste anywhere: text, Discord, email. The link works once.</p></td></tr>{/if}{/each}</tbody></table>{/if}
     <div class="mt-3 flex items-baseline gap-2"><input bind:value={newName} placeholder="a friend's first name" class="flex-1 text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && invite()} /><button class="btn" disabled={busy === "invite" || !newName.trim()} onclick={invite}>☞ Make a link</button></div>
+  </div>
+  <div class="card mt-5 !pb-4" style="border-top-color: var(--color-avocado)">
+    <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-3 · How she may reach you</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">{channels.length} way{channels.length === 1 ? "" : "s"}</span></div>
+    <div class="hair mt-1"></div>
+    <p class="body mt-2 text-dim">Gertrude reviews her notes and now and then has a suggestion: a follow-up, a question, someone in her circle who might help, in kind and unnamed until you say yes. Never more than one unprompted a week unless you are talking with her; nothing between 9 at night and 8 in the morning. Turn it off any time.</p>
+    <div class="mt-3 flex flex-wrap items-baseline gap-2">
+      {#if !channels.some((c) => c.kind === "webpush")}<button class="btn" onclick={pushOn}>☞ Turn on notifications</button>{/if}
+      {#if channels.length}<button class="btn" onclick={testReach}>Send a test</button>{/if}
+    </div>
+    <Install />
+    {#if channels.length}<table class="type mt-2 w-full text-[13px]"><tbody>{#each channels as c}<tr class="hair"><td class="py-1">{c.kind === "webpush" ? "notifications" : c.kind} · {c.label}</td><td class="text-dim text-[11px]">{c.last_sent ? "last " + when(c.last_sent) : "never used"}{c.failures ? " · " + c.failures + " failed" : ""}</td><td class="text-right"><button class="chip" onclick={() => (c.kind === "webpush" ? pushOff(c.id) : dropChannel(c.id))}>✗ off</button></td></tr>{/each}</tbody></table>{/if}
+    <div class="mt-3 flex items-baseline gap-2"><span class="type text-[11px] uppercase tracking-[0.08em] text-dim">ntfy topic</span><input bind:value={topic} placeholder="if you use ntfy.sh" class="flex-1 text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && ntfyOn()} /><button class="btn" disabled={!topic.trim()} onclick={ntfyOn}>Add</button></div>
+    <div class="hair mt-3"></div>
+    <div class="mt-2 flex flex-wrap items-baseline gap-2"><span class="type text-[11px] uppercase tracking-[0.08em] text-dim">Where you are</span>{#if placeName}<span class="type text-[13px]">near {placeName}</span><button class="chip" onclick={forgetPlace}>✗ forget</button>{:else}<button class="btn" onclick={sharePlace}>☞ Share roughly where you are</button><span class="type text-[11px] text-dim">kept to about a kilometre, so she can think of nearby people and places</span>{/if}</div>
+    {#if reach}<p class="type mt-2 text-[12px] text-brand" role="status">{reach}</p>{/if}
+    {#if myNudges.length}<p class="head mt-3">What she has sent you unprompted</p><ul class="type mt-1 text-[12px]">{#each myNudges as n}<li class="hair py-1"><span class="text-dim">{when(n.sent || n.created)} · {n.state}</span> {n.text}</li>{/each}</ul>{/if}
   </div>
   <div class="mt-6 flex items-baseline gap-3">
     <button class="btn" disabled={!!busy} onclick={forget}>{busy === "forget" ? "deleting…" : "✗ Delete everything about me"}</button>

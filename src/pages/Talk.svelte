@@ -1,6 +1,6 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, on, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte";
-  import { tick } from "svelte"; import { route } from "../lib/router.svelte.js";
+  import { tick } from "svelte"; import { route } from "../lib/router.svelte.js"; import Install from "../lib/Install.svelte";
   // ?demo shows a sample transcript without signing in, so the look can be checked and shared.
   const DEMO = [{ id: "d1", dir: "out", text: "Hello, I'm Gertrude. I should say straight away that I'm a digital person, a program, run by Anselm Hook here in Portland as a public service. I talk to people, I keep notes you can read and delete, and when I think two people ought to meet I ask them both first. So, what are you up to these days?", ts: "2026-10-27T18:00:00Z", channel: "web" }, { id: "d2", dir: "in", text: "Mostly fixing up an old sailboat and trying to find someone who knows diesel engines.", ts: "2026-10-27T18:01:00Z", channel: "web" }, { id: "d3", dir: "out", text: "A sailboat. What sort, and where does she live? And is it the engine that is beating you, or the finding of a person?", ts: "2026-10-27T18:01:20Z", channel: "web" }];
   const demo = $derived(route.q.has("demo"));
@@ -42,6 +42,7 @@
     {/each}
     {#if live}<div class="card her mb-3"><div class="who">Gertrude</div><div class="text">{live}</div></div>{:else if busy}<div class="card her mb-3"><div class="who">Gertrude</div><div class="text text-dim">…</div></div>{/if}
     {#if err}<p class="type text-[13px] text-brand" role="alert">✗ {err}</p>{/if}
+    {#if events.length >= 4 && !busy}<Install /><p class="type mt-2 text-[11px] text-dim">☞ She has suggestions now and then. <a class="text-brand" href="/card">Let her reach you</a>, if you like.</p>{/if}
   </div>
   <form class="fixed inset-x-0 bottom-0 z-20 bg-paper px-4 double pb-[max(env(safe-area-inset-bottom),12px)] pt-2" onsubmit={(e) => { e.preventDefault(); send(); }}>
     <div class="mx-auto flex max-w-3xl items-end gap-2 pr-12 md:pr-0">
