@@ -79,9 +79,20 @@ service, open source, mostly interested in what people are happy to have known.
 keep Gertrude. The alternatives he listed stay in the persona file as names she might
 mention as sisters or friends, which is cheap colour.
 
-**"ala avogado".** Not identified. The research found nothing matching avogado,
-avocado or Avogadro in a networking sense (Avocado was a 2012 couples app). Anselm to
-say what he meant; it may change how anchors work.
+**"ala avogado" is Advogato** (Anselm, by screenshot, the same evening): Raph Levien's
+1999 community site and its attack-resistant trust metric. Members certified each
+other (observer, apprentice, journeyer, master); trust was computed as a flow from a
+small seed set through those certifications, so an attacker who creates any number of
+fake accounts can only draw the bounded capacity of the real accounts that certified
+them. For Gertrude that means: **anchors are the seed set.** A person is in her graph
+only if trust flows to them from an anchor through vouches, and how much she will do
+for them (how many intros, whether she calls back, whether they can vouch others)
+scales with that flow. Attest already states its scoring the same way, "trust by flow
+from a root through vouches", with Jake Hartnell's Trustgraphs noted as the scoring
+layer; so anchor certifications are attest vouch records and Gertrude asks attest for
+flow from the anchor set rather than computing trust herself. Levien's metric is
+described in his thesis "Attack-resistant trust metrics" (UC Berkeley; written from
+memory, title to be confirmed when the reference is catalogued).
 
 ## 2. What was learned
 
@@ -216,7 +227,7 @@ Rules, each of which becomes code or persona text:
 7. Per-person "keep private" list and a one-message delete-everything path; retention
    measured in weeks for raw transcripts, with the card kept only while the person
    is active.
-8. Adults only, vouched by the sponsor. No companion framing, ever.
+8. Adults only, vouched by an anchor or by someone trust flows to from an anchor. No companion framing, ever.
 9. 10DLC registration, STOP and HELP handlers, STIR/SHAKEN A attestation and Free
    Caller Registry on day one, low steady volume to warm the number.
 
@@ -235,6 +246,7 @@ way to check it.
 | 6 | **Public by default, said so.** People know what is kept and can see their own card | Web card page with edit and delete; the opening script |
 | 7 | **Intro quality over volume.** Double opt-in, a daily cap per person, measured funnel (proposed, both yes, met, useful) | Admin page counters; a rule whose "useful" rate falls under a floor is switched off |
 | 8 | **Bridging, not clustering.** Prefer intros across circles | Edge source recorded; matcher scores cross-anchor pairs higher |
+| 8a | **Advogato seeding.** Everything she does for a person is bounded by trust flow from the anchor set; fake or spammy people cannot pull more than their certifiers' capacity | Flow computed from attest vouches; limits per level in config |
 | 9 | **Human in the loop at first.** Every outreach plan and every intro is approved by Anselm until the funnel earns autonomy | ntfy push with approve and decline actions; nothing sends without it |
 | 10 | **Open source, open participation.** Persona, matching rules and docs in the public repo; contributions are prompt and rule changes anyone can read | Public repo, MIT like attest (his call) |
 | 11 | **Observability.** Every turn, tool call, cost and consent is in one log Anselm can read from the phone | Admin page behind attest; ntfy for events |
@@ -293,6 +305,13 @@ next outreach. Server-side fallbacks on for refusals.
 through attest (passkey, the matchmaker pattern) and is bound to the number by a code
 she texts. A room link carries a per-person token. One `person` row, many
 `identities`.
+
+**Anchors.** Anselm, then named others, are the seed set. An anchor vouches a person
+(an attest vouch record, signed by the anchor's passkey); Gertrude texts that person
+for consent before any call. Vouched people may vouch in turn, and flow attenuates
+with each step, Advogato-style. Her per-person caps (calls back, intros a day, may
+vouch) are read from the flow, so the graph grows from the inside and stays hard to
+spam.
 
 **Proactivity with a leash.** The thinker writes an outreach plan (who, why, when, what
 she will open with). The plan goes to Anselm as an ntfy push with Approve and Decline
@@ -427,7 +446,8 @@ multi-language, a second persona.
 
 ## 6. Open questions for Anselm
 
-1. What is "avogado"?
+1. Advogato confirmed. Does trust flow get computed in attest (recommended, it is
+   attest's stated purpose) or inside Gertrude for now?
 2. Gertrude as the name, yes or no?
 3. What exactly did the Android phone do at litahotel.com: texts only, or voice too,
    and how? Is that phone, or another old Android with a SIM, available for Gertrude?
