@@ -48,3 +48,13 @@ found that a lead was not linked to its token; fixed in the store.
 - Email as the channel for sending invitations when the person has no better way.
 - The inviter's name on the landing page is the inviter's own disclosure; a person who wants to
   invite anonymously has no way yet.
+
+## Later the same evening: the note is the product
+
+Anselm: "I feel like I can get a blob of text to just send to a friend - basically an invite -
+then I can send via sms or discord or email - that's a good start. It is more cool if Gertrude
+reaches out to them herself but as far as an mvp goes this would be fine." Done: Form G-2 now
+has, per name, a send button (the phone's share sheet), a copy-note button, and a show button
+that prints the note on a card for selecting by hand. The note names the sender, says what she
+is, and carries the one-time link. Her reaching out herself stays a later stage, with email
+first; the inbound-first rule holds either way.
