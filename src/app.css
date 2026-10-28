@@ -1,0 +1,58 @@
+@import "tailwindcss";
+/* 1977, on purpose (Anselm, 2026-10-27: "every site I see today looks the same"). Cream stock, chocolate ink, one burnt-orange
+   accent with harvest gold for emphasis; a soft heavy serif in the Cooper/Windsor/Souvenir family for headings (Fraunces, OFL)
+   and a typewriter face for the transcript (Courier Prime, OFL). Both self-hosted; nothing is fetched from Google. */
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 400 900; font-display: swap; src: url(/fonts/Fraunces-normal-400-900.woff2) format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: italic; font-weight: 400 900; font-display: swap; src: url(/fonts/Fraunces-italic-400-900.woff2) format("woff2"); }
+@font-face { font-family: "Courier Prime"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/CourierPrime-normal-400.woff2) format("woff2"); }
+@font-face { font-family: "Courier Prime"; font-style: normal; font-weight: 700; font-display: swap; src: url(/fonts/CourierPrime-normal-700.woff2) format("woff2"); }
+@font-face { font-family: "Courier Prime"; font-style: italic; font-weight: 400; font-display: swap; src: url(/fonts/CourierPrime-italic-400.woff2) format("woff2"); }
+@theme {
+  --color-paper: #f4ead6;      /* cream stock */
+  --color-ink: #3a2a1e;        /* chocolate */
+  --color-dim: #7d6450;        /* faded brown */
+  --color-panel: #e9dcc2;      /* a second sheet of paper */
+  --color-brand: #c4541f;      /* burnt orange */
+  --color-gold: #d19a2a;       /* harvest gold */
+  --color-rule: #3a2a1e;
+  --font-display: "Fraunces", "Cooper Black", Georgia, serif;
+  --font-type: "Courier Prime", "Courier New", Courier, monospace;
+  --font-sans: var(--font-type);
+  --font-mono: var(--font-type);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: #241a14;    /* dark chocolate */
+    --color-ink: #f0e4cc;
+    --color-dim: #b39a80;
+    --color-panel: #33261d;
+    --color-brand: #e8783c;
+    --color-gold: #e2b14a;
+    --color-rule: #f0e4cc;
+  }
+}
+html { font-family: var(--font-type); -webkit-text-size-adjust: 100%; }
+body { background: var(--color-paper); color: var(--color-ink); }
+h1, h2, .display { font-family: var(--font-display); font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -0.01em; }
+h1 { font-weight: 800; font-size: 1.75rem; line-height: 1.1; }
+h2 { font-weight: 700; font-size: 1.05rem; line-height: 1.2; text-transform: lowercase; }
+.wordmark { font-family: var(--font-display); font-variation-settings: "SOFT" 100, "opsz" 144; font-weight: 900; letter-spacing: -0.02em; }
+.rule { border-top: 3px solid var(--color-rule); }
+.rule-double { border-top: 1px solid var(--color-rule); box-shadow: 0 3px 0 -1px var(--color-rule); }
+.num { font-variant-numeric: tabular-nums; }
+.chip { @apply inline-block px-1.5 py-0.5 text-[11px] leading-4 bg-panel text-dim; border-radius: 6px; }
+.btn { @apply px-3 py-1.5 text-sm text-ink; border: 2px solid var(--color-rule); border-radius: 10px; background: var(--color-panel); }
+.btn:hover { color: var(--color-brand); border-color: var(--color-brand); }
+.btn:disabled { opacity: 0.5; }
+.btn.primary { background: var(--color-brand); color: var(--color-paper); border-color: var(--color-brand); font-weight: 700; }
+.btn.primary:hover { color: var(--color-paper); background: var(--color-gold); border-color: var(--color-gold); }
+a { @apply text-inherit; }
+/* the transcript: typed, labelled, ruled, like a transcript from 1977; no bubbles */
+.line { @apply text-[15px] leading-relaxed whitespace-pre-wrap; padding: 0.5rem 0; }
+.line .who { font-family: var(--font-display); font-variation-settings: "SOFT" 100; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-bottom: 0.15rem; }
+.line.her .who { color: var(--color-brand); }
+.line.me .who { color: var(--color-dim); }
+.line.me { color: var(--color-ink); padding-left: 1.5rem; }
+textarea, input { background: var(--color-panel); color: var(--color-ink); border: 2px solid var(--color-rule); border-radius: 10px; padding: 0.5rem 0.75rem; outline: none; font-family: var(--font-type); }
+textarea:focus, input:focus { border-color: var(--color-brand); }
+ul.disc { list-style: square; }
