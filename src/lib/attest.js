@@ -16,7 +16,6 @@ export async function handshake() { if (!attestOrigin()) return null; let L; try
 // Sign in on attest. A popup where one can work (open it synchronously in the tap handler and pass it, so Safari allows it),
 // else a redirect to attest that comes back here with the session in the URL fragment (home-screen web apps, blocked popups).
 export const standalone = () => { try { return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch { return false; } };
-export function openPopup() { if (standalone()) return null; try { return window.open("about:blank", "attest-login", "popup,width=420,height=560"); } catch { return null; } }
 export async function signIn(popup) { const L = await lib(); return L.A.signIn(popup ? { popup } : { mode: "redirect" }); }
 export const returning = () => /^#attest-session=/.test(location.hash || "");
 export async function signOut() { try { (await lib()).A.clearSession(); } catch {} }

@@ -1,7 +1,9 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte";
-  let card = $state(null), consents = $state([]), person = $state(null), err = $state(""), busy = $state(""), name = $state(""), edit = $state(false), draft = $state("");
-  async function load() { try { const j = await rpc("card.get"); card = j.card; consents = j.consents; person = j.person; name = j.person.name || ""; err = ""; } catch (e) { err = e.message; } }
+  let card = $state(null), consents = $state([]), person = $state(null), err = $state(""), busy = $state(""), name = $state(""), edit = $state(false), draft = $state(""), leads = $state([]), edges = $state([]), newName = $state(""), copied = $state("");
+  async function load() { try { const j = await rpc("card.get"); card = j.card; consents = j.consents; person = j.person; name = j.person.name || ""; err = ""; const l = await rpc("leads.list"); leads = l.leads; edges = l.edges; } catch (e) { err = e.message; } }
+  async function copy(link, id) { try { await navigator.clipboard.writeText(link); copied = id; setTimeout(() => (copied = ""), 1500); } catch { prompt("copy this link", link); } }
+  async function invite() { const n = newName.trim(); if (!n) return; busy = "invite"; try { await rpc("invite.make", { name: n, about: "" }); newName = ""; await load(); } catch (e) { err = e.message; } busy = ""; }
   $effect(() => { if (session.user) load(); });
   const lists = [["needs", "What you could use"], ["offers", "What you can give"], ["interests", "What you care about"], ["people_in_kind", "Who you would like to meet"], ["open_threads", "What she means to come back to"]];
   async function saveName() { busy = "name"; try { await rpc("me.setName", { name }); session.user = { ...session.user, name }; } catch (e) { err = e.message; } busy = ""; }
@@ -40,6 +42,13 @@
       <div class="hair mt-5"></div>
       <p class="type mt-2 text-[12px] text-dim">☞ <button class="text-brand" onclick={startEdit}>edit as text</button> · <button class="text-brand" disabled={!!busy} onclick={rethink}>{busy === "think" ? "rewriting…" : "ask her to rewrite it"}</button></p>
     {/if}
+  </div>
+  <div class="card mt-5 !pb-4" style="border-top-color: var(--color-gold)">
+    <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-2 · People you have pointed her at</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">{leads.length} named · {edges.length} arrived</span></div>
+    <div class="hair mt-1"></div>
+    <p class="body mt-2 text-dim">Each is a link for you to send on yourself. She never contacts anyone first. When they arrive they hear that you sent them, nothing else.</p>
+    {#if leads.length}<table class="type mt-2 w-full text-[13px]"><tbody>{#each leads as l}<tr class="hair"><td class="py-1 pr-2">{l.name}</td><td class="text-dim text-[11px] pr-2">{l.about}</td><td class="text-right whitespace-nowrap">{#if l.arrived}<span class="chip" style="color: var(--color-avocado); border-color: var(--color-avocado)">✓ arrived</span>{:else if l.link}<button class="chip" onclick={() => copy(l.link, l.id)}>{copied === l.id ? "copied" : "copy link"}</button>{:else}<span class="chip">noted</span>{/if}</td></tr>{/each}</tbody></table>{/if}
+    <div class="mt-3 flex items-baseline gap-2"><input bind:value={newName} placeholder="a friend's first name" class="flex-1 text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && invite()} /><button class="btn" disabled={busy === "invite" || !newName.trim()} onclick={invite}>☞ Make a link</button></div>
   </div>
   <div class="mt-6 flex items-baseline gap-3">
     <button class="btn" disabled={!!busy} onclick={forget}>{busy === "forget" ? "deleting…" : "✗ Delete everything about me"}</button>

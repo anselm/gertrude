@@ -1,13 +1,11 @@
 <script>
-  import { session, login } from "./session.svelte.js"; import { openPopup } from "./attest.js";
-  let { why = "to talk to her" } = $props();
-  // Phones: no popup at all; attest's redirect flow brings the session back in the URL fragment (confirmed on his phone for
-  // matchmaker, 2026-10). A popup on a phone loses focus to whatever tab was behind it and reads as "something went wrong".
-  const phone = () => { try { return matchMedia("(pointer: coarse)").matches || innerWidth < 720; } catch { return false; } };
-  async function go() { const popup = phone() ? null : openPopup(); try { await login(popup); } catch {} }
+  import { session, login } from "./session.svelte.js";
+  let { why = "to talk to her", via = null } = $props();
+  // No popup anywhere (Anselm, 2026-10-27): attest's redirect flow signs in and returns here with the session in the fragment.
+  async function go() { try { await login(null); } catch {} }
 </script>
 <div class="pt-4">
-  <h1>She connects people.</h1>
+  {#if via}<p class="head mb-2">An invitation</p><h1>{via.by} sent you to Gertrude.</h1>{:else}<h1>She connects people.</h1>{/if}
   <div class="hair mt-3"></div>
   <div class="body cols-2 mt-3">
     <p>Gertrude is a digital person: a program, run by Anselm Hook in Portland, Oregon, as a public service. She asks what you are up to and what you could use, keeps a card on you that you can read, correct and delete, and when two cards fit she asks both sides whether they would like to meet. Nothing is sent to anyone until both have said yes.</p>

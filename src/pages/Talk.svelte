@@ -4,8 +4,13 @@
   // ?demo shows a sample transcript without signing in, so the look can be checked and shared.
   const DEMO = [{ id: "d1", dir: "out", text: "Hello, I'm Gertrude. I should say straight away that I'm a digital person, a program, run by Anselm Hook here in Portland as a public service. I talk to people, I keep notes you can read and delete, and when I think two people ought to meet I ask them both first. So, what are you up to these days?", ts: "2026-10-27T18:00:00Z", channel: "web" }, { id: "d2", dir: "in", text: "Mostly fixing up an old sailboat and trying to find someone who knows diesel engines.", ts: "2026-10-27T18:01:00Z", channel: "web" }, { id: "d3", dir: "out", text: "A sailboat. What sort, and where does she live? And is it the engine that is beating you, or the finding of a person?", ts: "2026-10-27T18:01:20Z", channel: "web" }];
   const demo = $derived(route.q.has("demo"));
+  // Arrived by an invitation link: remember the token across the sign-in redirect, show who sent it, redeem on first history load.
+  const KEY = "gt_invite"; let via = $state(null);
+  const m = route.path.match(/^\/i\/([a-z0-9]{8,16})$/); if (m) { try { localStorage.setItem(KEY, m[1]); } catch {} }
+  const token = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
+  $effect(() => { const t = token(); if (t && !session.user) rpc("invite.peek", { token: t }).then((j) => (via = j.used ? null : j)).catch(() => { via = null; try { localStorage.removeItem(KEY); } catch {} }); });
   let events = $state([]), text = $state(""), busy = $state(false), live = $state(""), err = $state(""), box; let loadedFor = null;
-  async function load() { try { const j = await rpc("talk.history"); events = j.events; err = ""; } catch (e) { err = e.message; } scroll(); }
+  async function load() { try { const j = await rpc("talk.history", { invite: token() }); events = j.events; err = ""; if (j.via || token()) { try { localStorage.removeItem(KEY); } catch {} if (location.pathname.startsWith("/i/")) history.replaceState(null, "", "/"); } } catch (e) { err = e.message; } scroll(); }
   $effect(() => { if (session.user && loadedFor !== session.user.id) { loadedFor = session.user.id; load(); } });
   const off = on("token", (t) => { live += t; scroll(); }); $effect(() => () => off());
   async function scroll() { await tick(); window.scrollTo(0, document.body.scrollHeight); }
@@ -22,7 +27,7 @@
     <p class="type mt-4 text-[13px] text-dim">☞ <a class="text-brand" href="/">Sign in</a> to talk to her yourself.</p>
   </div>
 {:else if !session.loaded}<p class="type pt-6 text-[13px] text-dim">one moment…</p>
-{:else if !session.user}<SignIn />
+{:else if !session.user}<SignIn {via} />
 {:else}
   <div class="flex flex-col pb-28">
     {#each events as e, i (e.id)}

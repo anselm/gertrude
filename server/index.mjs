@@ -7,7 +7,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), ".."); const PORT = N
 const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
 const H = {
   "me": async (u) => ({ user: svc.me(u), attest: ATTEST_URL, stats: svc.stats() }),
-  "talk.history": (u) => svc.history(u), "talk.say": (u, p, sock) => svc.say(u, p, (ev, data) => sock.emit(ev, data)),
+  "talk.history": (u, p) => svc.history(u, p), "invite.peek": (u, p) => svc.peekInvite(u, p), "leads.list": (u) => svc.myLeads(u), "invite.make": (u, p) => svc.makeInvite(u, p), "talk.say": (u, p, sock) => svc.say(u, p, (ev, data) => sock.emit(ev, data)),
   "card.get": (u) => svc.getCard(u), "card.set": (u, p) => svc.setCard(u, p), "card.rethink": (u) => svc.rethink(u), "me.setName": (u, p) => svc.setName(u, p), "me.forget": (u) => svc.forgetMe(u),
   "admin.overview": (u) => svc.adminOverview(u), "admin.person": (u, p) => svc.adminPerson(u, p), "admin.rethink": (u, p) => svc.adminRethink(u, p), "admin.status": (u, p) => svc.adminStatus(u, p),
 };

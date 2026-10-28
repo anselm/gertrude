@@ -3,7 +3,7 @@
   import Talk from "./pages/Talk.svelte"; import Card from "./pages/Card.svelte"; import About from "./pages/About.svelte"; import Admin from "./pages/Admin.svelte";
   refresh();
   let v = $state(null); fetch("/version.json").then((r) => (r.ok ? r.json() : null)).then((j) => (v = j)).catch(() => {});
-  const page = $derived(route.path === "/card" ? Card : route.path === "/about" ? About : route.path === "/admin" ? Admin : Talk);
+  const page = $derived(route.path === "/card" ? Card : route.path === "/about" ? About : route.path === "/admin" ? Admin : Talk); // "/" and "/i/<token>" are Talk
   const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }).toUpperCase();
 </script>
 <!-- the masthead: a Unigrid-style title band, then the four-stripe rule -->
