@@ -47,3 +47,7 @@ npm install && npm run build && npm start   # http://localhost:8070
 ```
 
 MIT.
+
+## Licence
+
+MIT. See `LICENSE`.

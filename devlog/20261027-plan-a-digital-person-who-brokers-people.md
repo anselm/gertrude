@@ -46,7 +46,7 @@ the brief):
 >   there may be other solutions.
 > + what other criteria are there? you may need to build a list of criteria
 > + how do we break this into milestones and deliverables? what is an mvp?
-> + i have started using nfty.sh/anselm-alerts - we can use that.
+> + i have started using nfty.sh/<his topic> - we can use that.
 > * lets make a plan, devlog it, and then i will sign off and we can make a prototype
 
 **Agent and session:** Claude Code (Fable 5.1) on servbox, tmux room `gertrude`,
