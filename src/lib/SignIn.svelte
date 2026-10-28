@@ -1,5 +1,5 @@
 <script>
-  import { session, login } from "./session.svelte.js";
+  import { session, login } from "./session.svelte.js"; import Install from "./Install.svelte";
   let { why = "to talk to her", via = null } = $props();
   // No popup anywhere (Anselm, 2026-10-27): attest's redirect flow signs in and returns here with the session in the fragment.
   async function go() { try { await login(null); } catch {} }
@@ -18,4 +18,5 @@
     <a class="type text-[12px] text-dim" href="/?demo">or read a sample</a>
   </div>
   {#if session.progress}<p class="type mt-3 text-[13px] text-dim" role="status">{session.progress}</p>{/if}
+  <Install />
 </div>

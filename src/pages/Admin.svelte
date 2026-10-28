@@ -22,7 +22,7 @@
     {#each o.people as p}<tr class="hair {p.status !== 'active' ? 'opacity-50' : ''}"><td class="py-1"><button class="text-brand" onclick={() => open(p.id)}>{p.name || p.handle || p.id}</button> {#if p.role === "admin"}<span class="chip">admin</span>{/if}</td><td class="num text-dim">{p.events}</td><td class="text-dim text-xs">{when(p.last_event || p.last_seen)}</td><td class="text-right whitespace-nowrap"><button class="chip" title="nudge interval, days" onclick={() => days(p.id, p.nudge_days)}>{p.nudge_days ?? 7}d</button> <button class="chip" disabled={busy === "n" + p.id} onclick={() => propose(p.id)}>{busy === "n" + p.id ? "…" : "nudge?"}</button> <button class="chip" onclick={() => status(p.id, p.status === "active" ? "paused" : "active")}>{p.status === "active" ? "pause" : "resume"}</button></td></tr>{/each}
   </tbody></table>
   {#if sel}
-    <div class="card mt-6 !pb-3" style="border-top-color: var(--color-ink)">
+    <div class="card plain mt-6 !pb-3" style="border-top-color: var(--color-ink)">
       <div class="flex items-baseline justify-between"><h2 class="pt-2">{sel.person.name || sel.person.handle || sel.person.id}</h2><button class="chip" disabled={busy === sel.person.id} onclick={() => rethink(sel.person.id)}>{busy ? "thinking…" : "rethink card"}</button></div>
       <p class="text-xs text-dim">{sel.person.did} · since {when(sel.person.created)}</p>
       {#if sel.card}<pre class="type mt-2 max-h-72 overflow-auto whitespace-pre-wrap text-[11px]">{JSON.stringify(sel.card, null, 1)}</pre>{:else}<p class="mt-2 text-xs text-dim">no card yet</p>{/if}

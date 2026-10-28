@@ -30,7 +30,7 @@
 {#if !session.loaded}<p class="type pt-6 text-[13px] text-dim">one moment…</p>
 {:else if !session.user}<SignIn why="to see your card" />
 {:else}
-  <div class="card mt-2 !pb-4" style="border-top-color: var(--color-ink)">
+  <div class="card plain mt-2 !pb-4" style="border-top-color: var(--color-ink)">
     <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-1 · Card on file</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">Rev. {fmt(card?._updated) || "—"} · by {card?._by || "—"}</span></div>
     <div class="hair mt-1"></div>
     <div class="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-2">
@@ -57,20 +57,20 @@
       <p class="type mt-2 text-[12px] text-dim">☞ <button class="text-brand" onclick={startEdit}>edit as text</button> · <button class="text-brand" disabled={!!busy} onclick={rethink}>{busy === "think" ? "rewriting…" : "ask her to rewrite it"}</button></p>
     {/if}
   </div>
-  <div class="card mt-5 !pb-4" style="border-top-color: var(--color-gold)">
+  <div class="card plain mt-5 !pb-4" style="border-top-color: var(--color-gold)">
     <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-2 · People you have pointed her at</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">{leads.length} named · {edges.length} arrived</span></div>
     <div class="hair mt-1"></div>
     <p class="body mt-2 text-dim">Each is a note with a one-time link, for you to send on yourself by text, Discord, email, whatever you use. She never contacts anyone first. When they arrive they hear that you sent them, nothing else.</p>
     {#if leads.length}<table class="type mt-2 w-full text-[13px]"><tbody>{#each leads as l}<tr class="hair"><td class="py-1 pr-2">{l.name}</td><td class="text-dim text-[11px] pr-2">{l.about}</td><td class="text-right whitespace-nowrap align-top py-1">{#if l.arrived}<span class="chip" style="color: var(--color-avocado); border-color: var(--color-avocado)">✓ arrived</span>{:else if l.link}<button class="chip" style="color: var(--color-brand); border-color: var(--color-brand)" onclick={() => send(l)}>☞ send</button> <button class="chip" onclick={() => copy(note(l), l.id)}>{copied === l.id ? "copied" : "copy note"}</button> <button class="chip" onclick={() => (shown = shown === l.id ? "" : l.id)}>{shown === l.id ? "hide" : "show"}</button>{:else}<span class="chip">noted</span>{/if}</td></tr>{#if shown === l.id && l.link}<tr><td colspan="3" class="pb-2"><div class="card !pb-2 !pt-1 select-all text-[13px] leading-6" style="border-top-color: var(--color-gold)">{note(l)}</div><p class="type text-[10px] text-dim mt-1">Select it and paste anywhere: text, Discord, email. The link works once.</p></td></tr>{/if}{/each}</tbody></table>{/if}
     <div class="mt-3 flex items-baseline gap-2"><input bind:value={newName} placeholder="a friend's first name" class="flex-1 text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && invite()} /><button class="btn" disabled={busy === "invite" || !newName.trim()} onclick={invite}>☞ Make a link</button></div>
   </div>
-  <div class="card mt-5 !pb-4" style="border-top-color: var(--color-avocado)">
+  <div class="card plain mt-5 !pb-4" style="border-top-color: var(--color-avocado)">
     <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-3 · How she may reach you</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">{channels.length} way{channels.length === 1 ? "" : "s"}</span></div>
     <div class="hair mt-1"></div>
     <p class="body mt-2 text-dim">Gertrude reviews her notes and now and then has a suggestion: a follow-up, a question, someone in her circle who might help, in kind and unnamed until you say yes. You set how often, here or just by telling her.</p>
     <div class="mt-2 flex flex-wrap items-baseline gap-2 type text-[12px]"><span class="uppercase tracking-[0.08em] text-dim text-[11px]">Unprompted</span><select bind:value={cad.nudge_days} onchange={saveCad} class="!py-0.5 !text-[12px]">{#each CAD as [d, l]}<option value={d}>{l}</option>{/each}{#if !CAD.some(([d]) => d === cad.nudge_days)}<option value={cad.nudge_days}>every {cad.nudge_days} days</option>{/if}</select><span class="uppercase tracking-[0.08em] text-dim text-[11px]">quiet from</span><input type="number" min="0" max="23" bind:value={cad.quiet_from} onchange={saveCad} class="w-14 !py-0.5 !text-[12px]" /><span class="uppercase tracking-[0.08em] text-dim text-[11px]">to</span><input type="number" min="0" max="23" bind:value={cad.quiet_to} onchange={saveCad} class="w-14 !py-0.5 !text-[12px]" /><span class="text-dim text-[11px]">o'clock, your time</span></div>
     <div class="mt-3 flex flex-wrap items-baseline gap-2">
-      {#if !channels.some((c) => c.kind === "webpush")}<button class="btn" onclick={pushOn}>☞ Turn on notifications</button>{/if}
+      {#if !channels.some((c) => c.kind === "webpush")}<button class="btn" onclick={pushOn} disabled={push.isIOS() && !push.standalone()}>☞ Turn on notifications</button>{#if push.isIOS() && !push.standalone()}<span class="type text-[11px] text-dim">first put her on your home screen, below</span>{/if}{/if}
       {#if channels.length}<button class="btn" onclick={testReach}>Send a test</button>{/if}
     </div>
     <Install />

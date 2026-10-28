@@ -49,6 +49,7 @@ h2, .head { font-family: var(--font-type); font-weight: 700; font-size: 11px; le
 /* an index card: cream, faint ruled lines at the leading, a red top rule, square corners */
 .card { background: var(--color-card); border: 1px solid var(--color-rule); border-top: 3px solid var(--color-brand); padding: 0 12px 10px; position: relative;
   background-image: repeating-linear-gradient(to bottom, transparent 0 23px, var(--color-line) 23px 24px); background-origin: content-box; background-position: 0 2px; }
+.card.plain { background-image: none; }
 .card .who { font-family: var(--font-type); font-weight: 700; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 24px; color: var(--color-brand); }
 .card.me .who { color: var(--color-dim); }
 .card .stamp { position: absolute; right: 10px; top: 3px; font-family: var(--font-type); font-size: 10px; letter-spacing: 0.06em; color: var(--color-dim); line-height: 1; }

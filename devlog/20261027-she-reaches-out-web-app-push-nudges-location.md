@@ -90,3 +90,16 @@ Design consequence of "primarily conversational": the pages stay few and thin (t
 the record, about, admin for the operator). Anything a person wants done goes through her
 first; the card page is where they check what she did. Deleting everything stays on the card
 page behind a confirm, because a misheard "forget it" must not erase a person.
+
+## Later: is the install clear?
+
+Anselm: "Is this clear to people?" It was not, quite. Fixed: the iPhone steps now say Safari,
+draw the Share glyph, number the three steps and say that notifications only work from the home
+screen icon; an iPhone visitor in Chrome or Firefox is told to open the address in Safari
+first; the install card also shows on the sign-in page, so a newcomer can install before they
+sign in (attest's redirect sign-in works inside a home-screen app, per matchmaker); the card
+page's notifications button is disabled on an uninstalled iPhone with the reason beside it.
+And because she is the interface: the client now tells the server the device in words
+("iPhone, Chrome, in the browser, not installed") and her context carries the exact steps for
+that device, so when she asks someone to put her on their phone she can say how. Checked with
+iPhone Safari and iPhone Chrome user agents, light and dark.

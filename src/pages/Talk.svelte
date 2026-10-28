@@ -1,6 +1,6 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, on, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte";
-  import { tick } from "svelte"; import { route } from "../lib/router.svelte.js"; import Install from "../lib/Install.svelte";
+  import { tick } from "svelte"; import { route } from "../lib/router.svelte.js"; import Install from "../lib/Install.svelte"; import { describe } from "../lib/install.svelte.js";
   // ?demo shows a sample transcript without signing in, so the look can be checked and shared.
   const DEMO = [{ id: "d1", dir: "out", text: "Hello, I'm Gertrude. I should say straight away that I'm a digital person, a program, run by Anselm Hook here in Portland as a public service. I talk to people, I keep notes you can read and delete, and when I think two people ought to meet I ask them both first. So, what are you up to these days?", ts: "2026-10-27T18:00:00Z", channel: "web" }, { id: "d2", dir: "in", text: "Mostly fixing up an old sailboat and trying to find someone who knows diesel engines.", ts: "2026-10-27T18:01:00Z", channel: "web" }, { id: "d3", dir: "out", text: "A sailboat. What sort, and where does she live? And is it the engine that is beating you, or the finding of a person?", ts: "2026-10-27T18:01:20Z", channel: "web" }];
   const demo = $derived(route.q.has("demo"));
@@ -19,7 +19,7 @@
   let sending = $state(false);
   async function send() { const t = text.trim(); if (!t || busy) return; busy = true; sending = true; text = ""; live = ""; err = ""; const cid = (crypto.randomUUID?.() || String(Date.now())).slice(0, 36); events = [...events, { id: "tmp-" + cid, dir: "in", text: t, ts: new Date().toISOString(), channel: "web", pending: true }]; scroll();
     const offTok = on("token", () => { sending = false; });
-    try { const out = await rpc("talk.say", { text: t, cid }, 120000); sending = false; events = events.map((e) => e.id === "tmp-" + cid ? { ...e, pending: false } : e); if (out?.id !== "pending") events = [...events, out]; }
+    try { const out = await rpc("talk.say", { text: t, cid, device: describe() }, 120000); sending = false; events = events.map((e) => e.id === "tmp-" + cid ? { ...e, pending: false } : e); if (out?.id !== "pending") events = [...events, out]; }
     catch (e) { err = e.message + " — your message was not sent"; events = events.filter((e) => e.id !== "tmp-" + cid); text = t; }
     finally { offTok(); live = ""; busy = false; sending = false; scroll(); } }
   const parts = (t) => String(t).split(/(https?:\/\/[^\s)]+)/g).map((x, i) => ({ x, link: i % 2 === 1 }));
