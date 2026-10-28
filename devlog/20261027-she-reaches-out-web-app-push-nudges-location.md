@@ -103,3 +103,13 @@ And because she is the interface: the client now tells the server the device in 
 ("iPhone, Chrome, in the browser, not installed") and her context carries the exact steps for
 that device, so when she asks someone to put her on their phone she can say how. Checked with
 iPhone Safari and iPhone Chrome user agents, light and dark.
+
+## Later: verified on his phone
+
+Anselm added Gertrude to his iOS home screen, signed in inside the installed app, turned on
+notifications and pressed "Send a test"; the test arrived. His words: "Test worked - so now
+Gertrude can send messages at least in one way." That was the one piece of this entry not
+proven by a script: a real Web Push subscription from a phone, through the service worker,
+to a notification on the lock screen. The remaining unproven step is a nudge proposed by the
+thinker, approved from ntfy, arriving the same way; the dispatcher path is tested end to end
+only against the ntfy channel (`scripts/nudge-test.mjs`).
