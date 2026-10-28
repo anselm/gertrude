@@ -1,7 +1,9 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte"; import * as push from "../lib/push.js"; import Install from "../lib/Install.svelte";
-  let channels = $state([]), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]);
-  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; placeName = j.place; myNudges = j.nudges; } catch {} }
+  let channels = $state([]), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]), cad = $state({ nudge_days: 7, quiet_from: 21, quiet_to: 8 });
+  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; placeName = j.place; myNudges = j.nudges; cad = j.cadence; } catch {} }
+  const CAD = [[0, "never"], [1, "daily at most"], [7, "weekly at most"], [14, "fortnightly"], [30, "monthly"]];
+  async function saveCad() { try { cad = await rpc("cadence.set", cad); reach = "noted"; } catch (e) { reach = e.message; } }
   async function pushOn() { reach = "asking…"; try { await push.enable(); reach = "on"; await loadChannels(); } catch (e) { reach = e.message; } }
   async function pushOff(id) { reach = ""; try { await push.disable(id); await loadChannels(); } catch (e) { reach = e.message; } }
   async function ntfyOn() { reach = ""; try { await rpc("channel.add", { kind: "ntfy", address: { topic: topic.trim() }, label: "ntfy" }); topic = ""; await loadChannels(); } catch (e) { reach = e.message; } }
@@ -65,7 +67,8 @@
   <div class="card mt-5 !pb-4" style="border-top-color: var(--color-avocado)">
     <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-3 · How she may reach you</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">{channels.length} way{channels.length === 1 ? "" : "s"}</span></div>
     <div class="hair mt-1"></div>
-    <p class="body mt-2 text-dim">Gertrude reviews her notes and now and then has a suggestion: a follow-up, a question, someone in her circle who might help, in kind and unnamed until you say yes. Never more than one unprompted a week unless you are talking with her; nothing between 9 at night and 8 in the morning. Turn it off any time.</p>
+    <p class="body mt-2 text-dim">Gertrude reviews her notes and now and then has a suggestion: a follow-up, a question, someone in her circle who might help, in kind and unnamed until you say yes. You set how often, here or just by telling her.</p>
+    <div class="mt-2 flex flex-wrap items-baseline gap-2 type text-[12px]"><span class="uppercase tracking-[0.08em] text-dim text-[11px]">Unprompted</span><select bind:value={cad.nudge_days} onchange={saveCad} class="!py-0.5 !text-[12px]">{#each CAD as [d, l]}<option value={d}>{l}</option>{/each}{#if !CAD.some(([d]) => d === cad.nudge_days)}<option value={cad.nudge_days}>every {cad.nudge_days} days</option>{/if}</select><span class="uppercase tracking-[0.08em] text-dim text-[11px]">quiet from</span><input type="number" min="0" max="23" bind:value={cad.quiet_from} onchange={saveCad} class="w-14 !py-0.5 !text-[12px]" /><span class="uppercase tracking-[0.08em] text-dim text-[11px]">to</span><input type="number" min="0" max="23" bind:value={cad.quiet_to} onchange={saveCad} class="w-14 !py-0.5 !text-[12px]" /><span class="text-dim text-[11px]">o'clock, your time</span></div>
     <div class="mt-3 flex flex-wrap items-baseline gap-2">
       {#if !channels.some((c) => c.kind === "webpush")}<button class="btn" onclick={pushOn}>☞ Turn on notifications</button>{/if}
       {#if channels.length}<button class="btn" onclick={testReach}>Send a test</button>{/if}

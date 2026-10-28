@@ -66,3 +66,27 @@ for a flat mark, draw it; keep Chrome for pages.
 - Taper and tune: the interval is per person already; cadence by reply rate is next.
 - Resources (places, events, organisations) as a card kind the nudge can draw on.
 - Trust flow and caps from the anchor set (M3).
+
+## Later: settings by conversation, and the interface is the conversation
+
+Anselm: "people will need to be able to tell Gertrude about their be bugged cadence - in a
+sense Gertrude has to be smart enough to decide what a users intention is and if it is an
+intention to tweak their own settings." And: "I do think we will be primarily conversational -
+in traditional websites I would have a lot of rich interfaces and about pages and so on but
+here I am leaning into your interaction with a digital town gossip or old lady."
+
+Built: a `settings` tool on the talker (how often she may write unprompted: off, daily, weekly,
+fortnightly, monthly; quiet hours), per-person quiet hours in the store and the dispatcher, and
+a persona section on taking "once a month is plenty" as an instruction, confirming it back in
+words, and asking "shall I take that as a rule?" when unsure. The tool records their words as
+the consent. The card page shows the same settings, editable, because what she heard must be
+visible; it is a record, not the interface. Test: Ida says "once a month is plenty, and never
+before ten in the morning"; the tool fires with monthly and quiet-to 10, the row reads 30 days
+and 21:00–10:00, the consent carries her sentence, and Gertrude answers "Once a month at most,
+then, and never before ten in the morning." The first run hit a 400: strict tool schemas do not
+allow `minimum`/`maximum` on integers; bounds moved into code.
+
+Design consequence of "primarily conversational": the pages stay few and thin (talk, card as
+the record, about, admin for the operator). Anything a person wants done goes through her
+first; the card page is where they check what she did. Deleting everything stays on the card
+page behind a confirm, because a misheard "forget it" must not erase a person.

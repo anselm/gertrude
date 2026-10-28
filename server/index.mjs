@@ -9,7 +9,7 @@ const H = {
   "me": async (u) => ({ user: svc.me(u), attest: ATTEST_URL, stats: svc.stats() }),
   "talk.history": (u, p) => svc.history(u, p), "invite.peek": (u, p) => svc.peekInvite(u, p), "leads.list": (u) => svc.myLeads(u), "invite.make": (u, p) => svc.makeInvite(u, p), "talk.say": (u, p, sock) => svc.say(u, p, (ev, data) => sock.emit(ev, data)),
   "card.get": (u) => svc.getCard(u), "card.set": (u, p) => svc.setCard(u, p), "card.rethink": (u) => svc.rethink(u), "me.setName": (u, p) => svc.setName(u, p), "me.forget": (u) => svc.forgetMe(u),
-  "push.key": () => svc.pushKey(), "channel.add": (u, p) => svc.addChannel(u, p), "channel.remove": (u, p) => svc.removeChannel(u, p), "channel.list": (u) => svc.myChannels(u), "channel.test": (u) => svc.testChannel(u), "place.set": (u, p) => svc.setPlace(u, p), "place.clear": (u) => svc.clearPlace(u),
+  "push.key": () => svc.pushKey(), "channel.add": (u, p) => svc.addChannel(u, p), "channel.remove": (u, p) => svc.removeChannel(u, p), "channel.list": (u) => svc.myChannels(u), "channel.test": (u) => svc.testChannel(u), "cadence.set": (u, p) => svc.setCadence(u, p), "place.set": (u, p) => svc.setPlace(u, p), "place.clear": (u) => svc.clearPlace(u),
   "admin.nudges": (u, p) => svc.adminNudges(u, p), "admin.nudge.decide": (u, p) => svc.adminDecide(u, p), "admin.nudge.propose": (u, p) => svc.adminPropose(u, p), "admin.nudge.review": (u) => svc.adminReview(u), "admin.nudge.days": (u, p) => svc.adminNudgeDays(u, p),
   "admin.overview": (u) => svc.adminOverview(u), "admin.person": (u, p) => svc.adminPerson(u, p), "admin.rethink": (u, p) => svc.adminRethink(u, p), "admin.status": (u, p) => svc.adminStatus(u, p),
 };
