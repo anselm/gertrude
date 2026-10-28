@@ -1,7 +1,10 @@
 <script>
   import { session, login } from "./session.svelte.js"; import { openPopup } from "./attest.js";
   let { why = "to talk to her" } = $props();
-  async function go() { const popup = openPopup(); try { await login(popup); } catch {} }
+  // Phones: no popup at all; attest's redirect flow brings the session back in the URL fragment (confirmed on his phone for
+  // matchmaker, 2026-10). A popup on a phone loses focus to whatever tab was behind it and reads as "something went wrong".
+  const phone = () => { try { return matchMedia("(pointer: coarse)").matches || innerWidth < 720; } catch { return false; } };
+  async function go() { const popup = phone() ? null : openPopup(); try { await login(popup); } catch {} }
 </script>
 <div class="pt-4">
   <h1>She connects people.</h1>
