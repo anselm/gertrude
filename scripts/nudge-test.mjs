@@ -2,7 +2,7 @@
 // Anselm's), the thinker proposes (one model call), the operator approves, dispatch delivers outside quiet hours and the log
 // shows it. Run: NTFY_TOPIC=<throwaway> node scripts/nudge-test.mjs
 import { mkdtempSync } from "node:fs"; import { tmpdir } from "node:os"; import { join } from "node:path";
-process.env.GERTRUDE_DB = join(mkdtempSync(join(tmpdir(), "gertrude-nudge-")), "t.db"); process.env.QUIET_FROM = "23"; process.env.QUIET_TO = "0"; process.env.NUDGE_SECRET = "test-secret";
+process.env.GERTRUDE_DB = join(mkdtempSync(join(tmpdir(), "gertrude-nudge-")), "t.db"); process.env.QUIET_FROM = "0"; process.env.QUIET_TO = "0"; process.env.NUDGE_SECRET = "test-secret";
 const topic = process.env.NTFY_TOPIC || "gertrude-selftest-" + Math.random().toString(36).slice(2, 8); process.env.NTFY_TOPIC = topic;
 const { person, event, card, channel, nudge, lead, invite } = await import("../lib/store.mjs"); const N = await import("../lib/nudge.mjs"); const talker = await import("../lib/talker.mjs");
 const fail = (m) => { console.error("FAIL", m); process.exit(1); };

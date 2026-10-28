@@ -2,7 +2,7 @@
 // Transport only. One socket per client; {name, payload} requests switched here to the service; a turn streams tokens back
 // on the same socket before its ack. HTTP serves the static build and nothing else (identity rides in the socket handshake).
 import "../lib/env.mjs"; import Fastify from "fastify"; import fstatic from "@fastify/static"; import { Server } from "socket.io";
-import { join, dirname } from "node:path"; import { fileURLToPath } from "node:url"; import { existsSync, readFileSync } from "node:fs"; import * as svc from "../lib/service.mjs"; import * as thinker from "../lib/thinker.mjs"; import * as nudging from "../lib/nudge.mjs"; import { verifyHandshake, ATTEST_URL } from "../lib/attest.mjs";
+import { join, dirname } from "node:path"; import { fileURLToPath } from "node:url"; import { existsSync, readFileSync } from "node:fs"; import * as svc from "../lib/service.mjs"; import * as thinker from "../lib/thinker.mjs"; import * as nudging from "../lib/nudge.mjs"; import * as matcher from "../lib/matcher.mjs"; import { verifyHandshake, ATTEST_URL } from "../lib/attest.mjs";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), ".."); const PORT = Number(process.env.PORT || 8070), HOST = process.env.HOST || "0.0.0.0";
 const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
 const H = {
@@ -11,10 +11,13 @@ const H = {
   "card.get": (u) => svc.getCard(u), "card.set": (u, p) => svc.setCard(u, p), "card.rethink": (u) => svc.rethink(u), "me.setName": (u, p) => svc.setName(u, p), "me.forget": (u) => svc.forgetMe(u),
   "push.key": () => svc.pushKey(), "channel.add": (u, p) => svc.addChannel(u, p), "channel.remove": (u, p) => svc.removeChannel(u, p), "channel.list": (u) => svc.myChannels(u), "channel.test": (u) => svc.testChannel(u), "cadence.set": (u, p) => svc.setCadence(u, p), "place.set": (u, p) => svc.setPlace(u, p), "place.clear": (u) => svc.clearPlace(u),
   "admin.nudges": (u, p) => svc.adminNudges(u, p), "admin.nudge.decide": (u, p) => svc.adminDecide(u, p), "admin.nudge.propose": (u, p) => svc.adminPropose(u, p), "admin.nudge.review": (u) => svc.adminReview(u), "admin.nudge.days": (u, p) => svc.adminNudgeDays(u, p),
+  "intros.list": (u) => svc.myIntros(u), "admin.intros": (u, p) => svc.adminIntros(u, p), "admin.intro.decide": (u, p) => svc.adminIntroDecide(u, p), "admin.match": (u, p) => svc.adminMatch(u, p),
   "admin.overview": (u) => svc.adminOverview(u), "admin.person": (u, p) => svc.adminPerson(u, p), "admin.rethink": (u, p) => svc.adminRethink(u, p), "admin.status": (u, p) => svc.adminStatus(u, p),
 };
 // The one HTTP write: ntfy's action buttons POST here with a signed token (no session on the phone's notification shade).
 app.post("/nudge/:id/:action", async (req, rep) => { try { const n = svc.webhookDecide(String(req.params.id), String(req.params.action), String(req.query.k || "")); return rep.send({ ok: true, state: n.state }); } catch (e) { return rep.code(e.code || 500).send({ error: e.message }); } });
+app.post("/intro/:id/:action", async (req, rep) => { try { const i = svc.webhookIntro(String(req.params.id), String(req.params.action), String(req.query.k || "")); return rep.send({ ok: true, state: i.state }); } catch (e) { return rep.code(e.code || 500).send({ error: e.message }); } });
+app.get("/intro/:id/:action", async (req, rep) => { try { const i = svc.webhookIntro(String(req.params.id), String(req.params.action), String(req.query.k || "")); return rep.type("text/plain").send(`${i.state}: ${i.a_name || i.a_handle} and ${i.b_name || i.b_handle}`); } catch (e) { return rep.code(e.code || 500).type("text/plain").send(e.message); } });
 app.get("/nudge/:id/:action", async (req, rep) => { try { const n = svc.webhookDecide(String(req.params.id), String(req.params.action), String(req.query.k || "")); return rep.type("text/plain").send(`${n.state}: "${n.text}"`); } catch (e) { return rep.code(e.code || 500).type("text/plain").send(e.message); } });
 const dist = join(ROOT, "dist");
 if (existsSync(dist)) { await app.register(fstatic, { root: dist, prefix: "/", index: false }); const shell = () => readFileSync(join(dist, "index.html"), "utf8"); // read per request: a rebuild changes the asset hashes
@@ -27,5 +30,5 @@ io.on("connection", (sock) => { let user; sock.data = {}; const origin = sock.ha
   sock.on("rpc", async (req, ack) => { const { name, payload = {} } = req || {}; const fn = H[name];
     try { if (!fn) throw new svc.Fail(404, `no such request: ${name}`); if (user === undefined || name === "me") await auth(); const data = await fn(user, payload, sock); if (name === "me") data.error = sock.data.authError || ""; ack({ ok: true, data }); }
     catch (e) { ack({ ok: false, code: e.code || 500, error: e.message }); if (!e.code) console.error(name, e); } }); });
-await svc.init(); thinker.start(); nudging.start();
+await svc.init(); thinker.start(); nudging.start(); matcher.start();
 await app.listen({ port: PORT, host: HOST }); console.log(`gertrude listening on http://${HOST}:${PORT} (socket.io; identity from ${ATTEST_URL})`);

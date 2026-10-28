@@ -1,7 +1,7 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte"; import * as push from "../lib/push.js"; import Install from "../lib/Install.svelte";
-  let channels = $state([]), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]), cad = $state({ nudge_days: 7, quiet_from: 21, quiet_to: 8 });
-  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; placeName = j.place; myNudges = j.nudges; cad = j.cadence; } catch {} }
+  let myIntros = $state([]); let channels = $state([]), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]), cad = $state({ nudge_days: 7, quiet_from: 21, quiet_to: 8 });
+  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; placeName = j.place; myNudges = j.nudges; cad = j.cadence; myIntros = (await rpc("intros.list")).intros; } catch {} }
   const CAD = [[0, "never"], [1, "daily at most"], [7, "weekly at most"], [14, "fortnightly"], [30, "monthly"]];
   async function saveCad() { try { cad = await rpc("cadence.set", cad); reach = "noted"; } catch (e) { reach = e.message; } }
   async function pushOn() { reach = "asking…"; try { await push.enable(); reach = "on"; await loadChannels(); } catch (e) { reach = e.message; } }
@@ -81,6 +81,14 @@
     {#if reach}<p class="type mt-2 text-[12px] text-brand" role="status">{reach}</p>{/if}
     {#if myNudges.length}<p class="head mt-3">What she has sent you unprompted</p><ul class="type mt-1 text-[12px]">{#each myNudges as n}<li class="hair py-1"><span class="text-dim">{when(n.sent || n.created)} · {n.state}</span> {n.text}</li>{/each}</ul>{/if}
   </div>
+  {#if myIntros.length}
+  <div class="card plain mt-5 !pb-4" style="border-top-color: var(--color-rust)">
+    <div class="flex items-baseline justify-between pt-1"><span class="head">Form G-4 · Introductions</span><span class="type text-[10px] text-dim uppercase tracking-[0.08em]">{myIntros.filter((i) => i.state === "made").length} made</span></div>
+    <div class="hair mt-1"></div>
+    <p class="body mt-2 text-dim">When two cards fit she asks both people. Nobody is named until both have said yes, and what is handed over is only what each chose. Answer her in the conversation; this is the record.</p>
+    <table class="type mt-2 w-full text-[13px]"><tbody>{#each myIntros as i}<tr class="hair align-top"><td class="py-1 pr-2 whitespace-nowrap text-dim text-[11px]">{when(i.made || i.created)}</td><td class="py-1">{#if i.state === "made"}<b>{i.other}</b> · {i.about_other} <span class="text-dim">reach: {i.reach}</span>{#if i.outcome} <span class="chip">{i.outcome}</span>{/if}{:else if i.state === "approved"}she asked: “{i.asked}” <span class="text-dim">· you: {i.mine || "no answer yet"} · the other side: {i.theirs}</span>{:else if i.state === "dropped"}<span class="text-dim">did not go ahead this time</span>{:else}<span class="text-dim">{i.state}</span>{/if}</td></tr>{/each}</tbody></table>
+  </div>
+  {/if}
   <div class="mt-6 flex items-baseline gap-3">
     <button class="btn" disabled={!!busy} onclick={forget}>{busy === "forget" ? "deleting…" : "✗ Delete everything about me"}</button>
     <p class="type text-[11px] text-dim">Removes the conversation, this card and any consents at once. Your key stays yours, on attest.</p>
