@@ -16,6 +16,7 @@
   async function scroll() { await tick(); window.scrollTo(0, document.body.scrollHeight); }
   async function send() { const t = text.trim(); if (!t || busy) return; busy = true; text = ""; live = ""; events = [...events, { id: "tmp", dir: "in", text: t, ts: new Date().toISOString(), channel: "web" }]; scroll();
     try { const out = await rpc("talk.say", { text: t }, 120000); events = [...events, out]; } catch (e) { err = e.message; } finally { live = ""; busy = false; scroll(); } }
+  const parts = (t) => String(t).split(/(https?:\/\/[^\s)]+)/g).map((x, i) => ({ x, link: i % 2 === 1 }));
   function key(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }
 </script>
 {#if demo}
@@ -31,7 +32,7 @@
 {:else}
   <div class="flex flex-col pb-28">
     {#each events as e, i (e.id)}
-      <div class="card {e.dir === 'in' ? 'me' : 'her'} mb-3"><span class="stamp">{when(e.ts)}{e.channel !== "web" ? " · " + e.channel : ""}</span><div class="who">{e.dir === "in" ? (session.user.name || "You") : "Gertrude"}</div><div class="text">{e.text}</div><span class="no">No. {i + 1}</span></div>
+      <div class="card {e.dir === 'in' ? 'me' : 'her'} mb-3"><span class="stamp">{when(e.ts)}{e.channel !== "web" ? " · " + e.channel : ""}</span><div class="who">{e.dir === "in" ? (session.user.name || "You") : "Gertrude"}</div><div class="text">{#each parts(e.text) as q}{#if q.link}<a class="text-brand underline" href={q.x} target="_blank" rel="noopener">{q.x}</a>{:else}{q.x}{/if}{/each}</div><span class="no">No. {i + 1}</span></div>
     {/each}
     {#if live}<div class="card her mb-3"><div class="who">Gertrude</div><div class="text">{live}</div></div>{:else if busy}<div class="card her mb-3"><div class="who">Gertrude</div><div class="text text-dim">…</div></div>{/if}
     {#if err}<p class="type text-[13px] text-brand" role="alert">✗ {err}</p>{/if}
