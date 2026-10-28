@@ -20,8 +20,9 @@ The plan and criteria: `devlog/20261027-plan-a-digital-person-who-brokers-people
 
 ## Project-specific facts
 
-- Voice: LiveKit Agents (Node) + LiveKit Cloud number; SMS: Android phone with a SIM
-  running SMS Gateway for Android. No Twilio (his litahotel.com experience).
+- Story first, channels second: talk, walk, filter, match on the web with email as
+  her first outbound channel (MVP); voice via LiveKit Agents (Node) and SMS via an
+  Android phone with a SIM come after. No Twilio (his litahotel.com experience).
 - Inbound first: she never calls anyone without logged consent. Transcripts only, no
   audio. Disclose she is an AI on every first contact. These are rules, not defaults.
 - Nothing outbound (calls, intros) without Anselm's approval via ntfy until a rule's

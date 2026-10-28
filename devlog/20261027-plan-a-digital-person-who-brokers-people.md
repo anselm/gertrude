@@ -261,7 +261,7 @@ way to check it.
 Modular per house policy: small ES modules, formal interfaces, one store.
 
 ```
-                phone (Twilio voice)   SMS (Twilio)   web room (LiveKit, M4)   web card (attest)
+      web chat + card (attest, M1)  email (M2)  voice: browser room / LiveKit number (M5)  SMS: Android phone (M6)
                         │                  │                   │                    │
                  ┌──────┴──────────────────┴───────────────────┴────────────────────┴──────┐
                  │                 channel adapters  →  events on the bus                  │
@@ -399,65 +399,99 @@ the phone leg at first. A ten-minute call about $1; a hundred such calls a month
 $100 plus the VM. SMS through the phone costs the SIM plan. The thinker's Opus passes
 are pennies per person per day. A monthly cap in config stops outbound when hit.
 
-## 5. Milestones and the MVP
+## 5. Milestones, arranged by the story, not the channels
 
-Each milestone ends with something Anselm can try from his phone and a devlog entry
-with what was measured. Nothing goes live to anyone but him before M3 is signed off.
+Anselm, later still: "Let's arrange milestones to minimize blockers - we can even
+have a web only conversational interface to start - let's think about the whole
+story. We are talking to people - walking a social network - trying to filter bad
+actors - and matchmaking people in the background - consensually."
 
-**M0 · This plan.** Sign-off on: the name, the voice shape, inbound-first consent,
-transcripts-only, the sibling relationship to matchmaker, the licence. Decide
-"avogado".
+The story has four verbs: **talk**, **walk**, **filter**, **match**. Channels are a
+second axis and each has its own blocker: the web has none (attest sign-in exists,
+the Claude key exists, the VM is a command away); email needs only an SMTP account
+and is outside the robocall law; SMS needs a phone, a SIM and a charger at his house;
+phone voice needs a LiveKit account and the audio pipeline. So the story is built
+web-first with email as her first outbound voice, and the other channels are added
+when they are unblocked, in whatever order that happens. Each milestone ends with
+something he and a few friends can use, and a devlog entry with what was measured.
 
-**M1 · She has a voice** (the spike; a few days). LiveKit Cloud project with its free
-US number; a Node agent worker on the VM: Deepgram STT → Claude Sonnet 5.5 → an
-old-lady TTS voice, Silero VAD and the CPU turn detector. Persona v1 in the repo.
-Transcript stored per call. ntfy ping when she gets a call. A browser link to the same
-agent, since the room comes free with the stack. Deliverable: Anselm calls her, talks
-for five minutes, gets interrupted and interrupts her, and reports whether she feels
-like a person. Latency per turn logged. Go/no-go on LiveKit's turn handling.
+**Blockers, named.** (a) His time to try each step and give names. (b) Trust flow:
+attest states flow-from-a-root as its purpose but has not built scoring, so Gertrude
+computes a simple Advogato flow locally over vouch records now and hands it to attest
+later; nothing waits on attest. (c) Outbound contact: on the web she can only answer,
+so email is added early as the channel she speaks first on; it needs consent in the
+ordinary sense (an address given to her) and CAN-SPAM manners, not TCPA. (d) Hardware
+for SMS and an account for voice: side quests that can run any week in parallel.
 
-**M2 · She remembers** (a week; can run before M1, since it does not depend on
-voice). Person, identity, consent and event tables; SMS through an Android phone
-running SMS Gateway for Android in private-server mode, as the hotel did, with STOP
-and HELP handled in our code; the thinker's first job, rewriting the card after each contact;
-the web card page behind attest sign-in with edit and delete; the dropped-call
-recovery text; callback with permission (outbound to Anselm only). Deliverable: the
-continuity test in criterion 1 passes; Anselm reads his own card and corrects it.
+**M0 · This plan.** Sign-off.
 
-**M3 · She brokers** (two weeks). Anchors and sponsorship: Anselm gives her five to
-ten names with numbers; she texts each for consent before any call; first-contact
-script with the AI, public-service and open-source disclosures; needs, offers and
-edges extracted into cards; the matcher proposes pairs with a blurb for each side;
-double opt-in by text or call; Anselm approves outreach plans and intros from ntfy;
-the funnel counters on the admin page; daily cap; monthly cost cap. Deliverable: at
-least three real intros among his friends, each with an outcome recorded.
+**M1 · Talk** (web only). A page at the VM: sign in with attest, talk to Gertrude in
+text. Persona v1 in the repo, with the disclosures (AI, run by Anselm as a public
+service, open source, mostly public information). One log per person; the thinker
+rewrites the card after each conversation; the card page shows what she holds, with
+edit and delete-everything. Continuity: the same person on a phone browser and a
+laptop continues one conversation. ntfy ping when someone talks to her. Deliverable:
+Anselm and two friends, by link, each with a card they have read and corrected.
 
-**This is the MVP: M1 through M3.** A phone-and-text Gertrude who remembers everyone
-she has spoken to, carries a conversation across a dropped call, brokers consented
-intros among a seed group, and does nothing outbound without Anselm's thumb.
+**M2 · Walk.** The network grows by conversation. She asks who people know and what
+those people are about; a name given to her is stored as a claim with its source
+("A says they know B, a potter in Sellwood"), never as a fact about B. She offers to
+invite: the person sends the link themselves, or gives an email and she writes to B
+saying only that A thought they might like to talk. B arrives on the web already
+vouched by A. Edges, vouches and a local trust flow from the anchor set (Anselm, then
+others he names); a graph page for him. Email is live here as her first outbound
+channel. Deliverable: ten people reachable from Anselm within two hops, every one of
+them arrived by invitation, none by cold contact.
 
-**M4 · She is in the room** (a week). The browser room from M1 made real: a per-person
-link, camera optional; "shall we switch to video?" mid-call hands off without losing
-the thread; a Meet bot
-(Recall.ai or self-hosted Attendee) only if the seed group asks for Meet by name.
+**M3 · Filter.** The Advogato caps become real: what she does for a person (how many
+invitations, whether she writes first, whether they can vouch) follows the flow to
+them, and revoking a vouch cascades. The third-party rule is enforced in code, not
+only in the prompt: her replies are checked for details about people other than the
+speaker. Abuse signals (asking for others' contact details, many names with no
+substance, inconsistent identities, hostile tone) raise a flag to Anselm by ntfy; a
+flagged person is read-only until he decides. Do-not-contact list; retention jobs.
+Deliverable: a red-team session where a fake account vouched by a fake account tries
+to harvest the graph and gets exactly its certifiers' bounded capacity and nothing
+else.
 
-**M5 · Open participation.** Public repo tidy, README that explains her, persona and
-matching rules editable by pull request, a second anchor who is not Anselm, a small
-geography (his neighbourhood or one community) as the first bounded deployment, and
-the funnel published on the site.
+**M4 · Match.** The thinker, nightly and after each conversation, scores pairs across
+circles and drafts a blurb for each side from that side's own card. Anselm approves
+or declines from ntfy. She asks each party, in their next conversation or by email,
+with the other side's blurb; both yes and his yes make an intro, sent by email to
+both with the blurbs. Outcome asked later: met, useful, nothing. Funnel counters on
+the admin page; daily cap; monthly cost cap. Deliverable: three intros among his
+friends with outcomes recorded. **This is the MVP: M1 through M4, web and email
+only.** A Gertrude you can talk to, who grows a vouched graph, bounds bad actors and
+brokers consented intros, with no carrier, no hardware and no robocall law involved.
 
-Not in any milestone yet: WhatsApp, email as a channel, payments or bounties,
-multi-language, a second persona, and **a Gertrude app in the app stores** (Anselm's
-thought, same evening). An app would give her a carrier-free voice channel over
-WebRTC, push notifications and a home-screen presence; the cost is the install, which
-is the friction Boardy avoids on purpose, and a browser link already carries WebRTC
-voice and video without one. Worth revisiting at M5 if people ask for it, or if a
-carrier starts throttling the SIM.
+**M5 · Voice.** LiveKit Agents worker (Node, Anthropic plugin) on the VM, first as a
+"talk to me" button on the same page (browser room, no number), then the free
+LiveKit Cloud US number. Same log, same persona; a dropped call resumes by email or
+on the page. TCPA consent captured on the web before she ever calls anyone back.
+Deliverable: the dropped-call continuity test; Anselm's ear on whether she feels like
+a person. The audio spike itself is unblocked today and can run as a side quest any
+time; only its promotion into the product waits for M4.
+
+**M6 · Texts.** The Android phone with a SIM, SMS Gateway for Android in
+private-server mode, STOP and HELP in code, texting consent captured on the web.
+Deliverable: a conversation that starts on the web and continues by text.
+
+**M7 · Open participation.** Public repo tidy, README that explains her, persona and
+matching rules editable by pull request, a second anchor who is not Anselm, one
+bounded community as the first real deployment, the funnel published on the site.
+
+Not in any milestone yet: WhatsApp, Google Meet, payments or bounties, multi-language,
+a second persona, and **a Gertrude app in the app stores** (Anselm's thought, same
+evening). An app would give her a carrier-free voice channel over WebRTC, push
+notifications and a home-screen presence; the cost is the install, which is the
+friction Boardy avoids on purpose, and a browser link already carries WebRTC voice
+and video without one. Worth revisiting at M7 if people ask for it, or if a carrier
+starts throttling the SIM.
 
 ## 6. Open questions for Anselm
 
-1. Advogato confirmed. Does trust flow get computed in attest (recommended, it is
-   attest's stated purpose) or inside Gertrude for now?
+1. Advogato confirmed. Plan computes trust flow inside Gertrude for now so nothing
+   waits on attest, and moves it to attest when attest has scoring. Agreed?
 2. Gertrude as the name, yes or no?
 3. What exactly did the Android phone do at litahotel.com: texts only, or voice too,
    and how? Is that phone, or another old Android with a SIM, available for Gertrude?
@@ -467,6 +501,9 @@ carrier starts throttling the SIM.
 6. Sibling of matchmaker with its own store, or a voice front door to matchmaker?
 7. MIT licence and the `anselm` org, or `orbitalfoundation` like attest?
 8. Who are the first five names?
+9. Email for her first outbound channel: a transactional sender (Postmark, Resend,
+   Mailgun all have small free tiers; unverified today) or the VM's own SMTP? A
+   gertrude.monster or similar domain is implied; the .monster family fits.
 
 ## 7. Dead ends worth keeping
 
