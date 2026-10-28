@@ -381,9 +381,13 @@ on his network. A consumer SIM texting at human volume is person-to-person traff
 no 10DLC brand, no campaign vetting, no carrier review. The cost is the phone, a
 prepaid SIM, a charger that never gets unplugged, and the risk that a carrier throttles
 a SIM that texts hundreds of strangers, which at Gertrude's intended cadence should
-not happen. For voice it is the wrong tool: since 2022 Google Play forbids third-party
-apps capturing call audio and Android gives no API for it, so an Android phone can
-only carry her voice by speakerphone and a cable or a rooted dialer. A SIM in a GoIP
+not happen. Anselm (later the same evening): the hotel phone did text only, "which is
+actually fine to start with", and we are not abusing Google Play, since it is one
+sideloaded app on one phone of ours, not something published. Agreed on texts. For
+voice the Play policy is only the surface; the wall is Android itself: a non-system
+app cannot inject audio into a call's uplink at all, and capturing the downlink works
+only on some devices by accessibility tricks. So even our own sideloaded app can carry
+her voice only by speakerphone and a cable, or on a rooted phone with a system dialer. A SIM in a GoIP
 box or a Quectel modem has the same problem in 2026 form: US 2G/3G is gone and VoLTE
 through those devices is reported flaky. Voice goes through SIP; texts can go through
 the phone.
@@ -412,9 +416,10 @@ agent, since the room comes free with the stack. Deliverable: Anselm calls her, 
 for five minutes, gets interrupted and interrupts her, and reports whether she feels
 like a person. Latency per turn logged. Go/no-go on LiveKit's turn handling.
 
-**M2 · She remembers** (a week). Person, identity, consent and event tables; SMS
-through an Android phone running SMS Gateway for Android in private-server mode, with
-STOP and HELP handled in our code; the thinker's first job, rewriting the card after each contact;
+**M2 · She remembers** (a week; can run before M1, since it does not depend on
+voice). Person, identity, consent and event tables; SMS through an Android phone
+running SMS Gateway for Android in private-server mode, as the hotel did, with STOP
+and HELP handled in our code; the thinker's first job, rewriting the card after each contact;
 the web card page behind attest sign-in with edit and delete; the dropped-call
 recovery text; callback with permission (outbound to Anselm only). Deliverable: the
 continuity test in criterion 1 passes; Anselm reads his own card and corrects it.
@@ -442,7 +447,12 @@ geography (his neighbourhood or one community) as the first bounded deployment, 
 the funnel published on the site.
 
 Not in any milestone yet: WhatsApp, email as a channel, payments or bounties,
-multi-language, a second persona.
+multi-language, a second persona, and **a Gertrude app in the app stores** (Anselm's
+thought, same evening). An app would give her a carrier-free voice channel over
+WebRTC, push notifications and a home-screen presence; the cost is the install, which
+is the friction Boardy avoids on purpose, and a browser link already carries WebRTC
+voice and video without one. Worth revisiting at M5 if people ask for it, or if a
+carrier starts throttling the SIM.
 
 ## 6. Open questions for Anselm
 
