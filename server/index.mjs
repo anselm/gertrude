@@ -6,7 +6,7 @@ import { join, dirname } from "node:path"; import { fileURLToPath } from "node:u
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), ".."); const PORT = Number(process.env.PORT || 8070), HOST = process.env.HOST || "0.0.0.0";
 const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
 const H = {
-  "me": async (u) => ({ user: svc.me(u), attest: ATTEST_URL, stats: svc.stats() }),
+  "me": async (u) => ({ user: svc.me(u), attest: ATTEST_URL, stats: svc.stats(), phone: process.env.GERTRUDE_PHONE || "" }), // her telephone number, shown on the door
   "talk.history": (u, p) => svc.history(u, p), "invite.peek": (u, p) => svc.peekInvite(u, p), "leads.list": (u) => svc.myLeads(u), "vouch.list": (u) => svc.myVouches(u), "invite.make": (u, p) => svc.makeInvite(u, p), "talk.say": (u, p, sock) => svc.say(u, p, (ev, data) => sock.emit(ev, data)),
   "card.get": (u) => svc.getCard(u), "card.set": (u, p) => svc.setCard(u, p), "card.rethink": (u) => svc.rethink(u), "me.setName": (u, p) => svc.setName(u, p), "me.forget": (u) => svc.forgetMe(u),
   "voice.token": (u) => svc.voiceToken(u), "voice.status": () => svc.voiceStatus(), "push.key": () => svc.pushKey(), "channel.add": (u, p) => svc.addChannel(u, p), "channel.remove": (u, p) => svc.removeChannel(u, p), "channel.list": (u) => svc.myChannels(u), "phone.set": (u, p) => svc.setPhone(u, p), "phone.clear": (u) => svc.clearPhone(u), "channel.test": (u) => svc.testChannel(u), "cadence.set": (u, p) => svc.setCadence(u, p), "place.set": (u, p) => svc.setPlace(u, p), "place.clear": (u) => svc.clearPlace(u),

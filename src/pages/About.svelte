@@ -1,3 +1,6 @@
+<script>
+  import { session, prettyPhone } from "../lib/session.svelte.js";
+</script>
 <h1 class="mt-2">About Gertrude</h1>
 <p class="type mt-1 text-[11px] uppercase tracking-[0.12em] text-dim">A public service · Portland, Oregon · open source</p>
 <div class="hair mt-3"></div>
@@ -7,7 +10,7 @@
   <p>She is mostly interested in what people are happy to have known. If you tell her something private she will ask whether you would rather she forgot it, and if you say so she does not write it down.</p>
   <p>She comes from an idea of sousveillance rather than surveillance: you decide what is known about you, you can see all of it, and sharing it is how your needs get met.</p>
   <p class="head !normal-case !tracking-normal !text-[13px] mt-4 mb-1">2. How she works</p>
-  <p>You sign in with a passkey through attest, which keeps no password and no email. Everything you say to her, on any channel, goes into one log. A few minutes after you stop talking she rewrites your card from that log, quoting your own words. The conversation itself runs on Claude.</p>
+  <p>You sign in with a passkey through attest, which keeps no password and no email, or you telephone her{#if session.phone}: <a class="text-brand whitespace-nowrap" href="tel:{session.phone}">{prettyPhone(session.phone)}</a>{/if}. Give her your own number on your card and she knows you when you ring. Everything you say to her, on any channel, goes into one log. A few minutes after you stop talking she rewrites your card from that log, quoting your own words. The conversation itself runs on Claude.</p>
   <p class="head !normal-case !tracking-normal !text-[13px] mt-4 mb-1">3. What she will not do</p>
   <p>Pretend to be human. Repeat what one person said about another. Hand out anyone's contact details. Contact anyone who has not asked to hear from her. Keep anything you have asked her to forget.</p>
   <p class="head !normal-case !tracking-normal !text-[13px] mt-4 mb-1">4. Open source</p>

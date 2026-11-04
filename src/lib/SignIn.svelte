@@ -1,5 +1,5 @@
 <script>
-  import { session, login } from "./session.svelte.js"; import Install from "./Install.svelte";
+  import { session, login, prettyPhone } from "./session.svelte.js"; import Install from "./Install.svelte";
   let { why = "to talk to her", via = null } = $props();
   // No popup anywhere (Anselm, 2026-10-27): attest's redirect flow signs in and returns here with the session in the fragment.
   async function go() { try { await login(null); } catch {} }
@@ -17,12 +17,14 @@
       <button class="btn primary" disabled={session.busy || !session.loaded} onclick={go}>{session.busy ? "one moment…" : "☞ Say hello"}</button>
       <span class="type text-[12px] text-dim">It takes your face or fingerprint, no password, no email.</span>
     </div>
+    {#if session.phone}<p class="body mt-3">Or just ring me: <a class="text-brand whitespace-nowrap" href="tel:{session.phone}">{prettyPhone(session.phone)}</a>. Say {via.by} sent you.</p>{/if}
     <p class="type mt-3 text-[12px] text-dim"><a class="text-brand" href="/about">What is this?</a> · <a class="text-brand" href="/?demo">read a sample</a></p>
   {:else}
     <h1>She connects people.</h1>
     <div class="hair mt-3"></div>
     <div class="body mt-3">
       <p>Gertrude is a digital person: a program, run by Anselm Hook in Portland, Oregon, as a public service. She asks what you are up to and what you could use, keeps a card on you that you can read, correct and delete, and when two cards fit she asks both sides whether they would like to meet. Nothing is sent to anyone until both have said yes.</p>
+      {#if session.phone}<p>You can telephone her: <a class="text-brand whitespace-nowrap" href="tel:{session.phone}">{prettyPhone(session.phone)}</a>. Tell her who sent you. Once you have signed in, give her your own number on your card, so she knows it is you when you ring and can ring you back one day, by appointment.</p>{/if}
     </div>
     <div class="hair mt-3"></div>
     <div class="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-2">
