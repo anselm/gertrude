@@ -7,10 +7,11 @@
   // Arrived by an invitation link: remember the token across the sign-in redirect, show who sent it, redeem on first history load.
   const KEY = "gt_invite"; let via = $state(null);
   const m = route.path.match(/^\/i\/([a-z0-9]{8,16})$/); if (m) { try { localStorage.setItem(KEY, m[1]); } catch {} }
+  const f = route.path.match(/^\/from\/([a-z0-9._-]{1,40})$/i); if (f) { try { localStorage.setItem(KEY, "@" + decodeURIComponent(f[1]).toLowerCase()); } catch {} } // someone's standing link
   const token = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
   $effect(() => { const t = token(); if (t && !session.user) rpc("invite.peek", { token: t }).then((j) => (via = j.used ? null : j)).catch(() => { via = null; try { localStorage.removeItem(KEY); } catch {} }); });
   let events = $state([]), text = $state(""), busy = $state(false), live = $state(""), err = $state(""), box; let loadedFor = null;
-  async function load() { try { const j = await rpc("talk.history", { invite: token() }); events = j.events; err = ""; if (j.via || token()) { try { localStorage.removeItem(KEY); } catch {} if (location.pathname.startsWith("/i/")) history.replaceState(null, "", "/"); } } catch (e) { err = e.message; } scroll(); }
+  async function load() { try { const j = await rpc("talk.history", { invite: token() }); events = j.events; err = ""; if (j.via || token()) { try { localStorage.removeItem(KEY); } catch {} if (/^\/(i|from)\//.test(location.pathname)) history.replaceState(null, "", "/"); } } catch (e) { err = e.message; } scroll(); }
   $effect(() => { if (session.user && loadedFor !== session.user.id) { loadedFor = session.user.id; load(); } });
   const off = on("token", (t) => { live += t; scroll(); }); $effect(() => () => off());
   async function scroll() { await tick(); window.scrollTo(0, document.body.scrollHeight); }
