@@ -80,3 +80,9 @@ Deepgram Athena stays until he picks. `VOICE_TTS` in the environment file on the
   (outbound).
 
 Not deployed by this session; the live box still runs Spike A with the cache fix.
+
+## His verdict, later that night
+
+Anselm, after his calls and the three-way question (an app, Google Meet, a real number): "note our browser voice is a good
+start". The browser line stays the base; a phone number inbound is the next step, outbound by appointment after it, an
+app only when people ask to be rung on the lock screen, Meet not at all.
