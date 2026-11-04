@@ -107,6 +107,64 @@ detection), and the consent row end to end.
 **Then decide on D.** If the push-as-ring in A is too weak and C is labelled spam, the honest
 incoming-call experience needs a native shell with CallKit. That is a different project.
 
+## The package boundary (Anselm, later the same day)
+
+> It feels like this will be an independent package. If we want a diy solution the stack will be
+> a bit more complex such as handling vad.
+
+Yes to the package. The voice layer knows nothing about brokering and Gertrude's brain knows
+nothing about audio, so the seam is clean, and matchmaker or any later digital person would want
+the same thing. It starts as `packages/voice` in this repo (an npm workspace, never a `file:`
+dependency) and moves to its own repo and npm name when it has a second consumer.
+
+The interface is the part to get right now, because it is what lets the engine underneath change.
+The package asks its consumer for a **brain** and offers a **session**:
+
+```
+brain = {
+  greet(ctx)                 -> AsyncIterable<string>   // first words when the line opens
+  respond(transcript, ctx)   -> AsyncIterable<string>   // text out, streamed, for one user turn
+  interrupted(spokenPrefix)  -> void                    // what she managed to say before barge-in
+  end(ctx)                   -> void                    // line closed; ctx has duration, reason
+}
+ctx = { personId, channel: "web" | "phone", callId, from, to, consentId }
+
+voice.startWorker({ brain, stt, tts, voice, onTranscript })   // runs beside the server
+voice.roomToken({ personId })                                  // web app joins a room
+voice.call({ personId, to, consentId })                        // outbound, later
+voice.on("transcript", ({ callId, who, text, at }) => ...)     // transcripts only, into the log
+```
+
+Gertrude's side is small: `greet` and `respond` wrap the talker, `onTranscript` writes `in`/`out`
+events with `meta.voice = { callId }` to the same log the web chat uses, so a call and a chat are
+one conversation, which was the point from the first plan.
+
+**Engine one is LiveKit Agents JS behind that interface.** It owns the pieces that take months
+to make feel natural: Silero VAD, the trained end-of-utterance model, barge-in with transcript
+truncation, jitter and packet loss, WebRTC and SIP. We write the brain adapter and the glue. The
+package's public surface never mentions LiveKit, so a second engine can replace it.
+
+**What a DIY engine would actually have to carry**, for the record, so the trade is honest:
+
+- Transport: WebSocket PCM from the browser is easy for the web app and useless for phones; PSTN
+  means a SIP stack or a carrier's media-stream websocket at 8 kHz mu-law. This alone is why
+  LiveKit stays for anything with a number.
+- VAD: Silero over onnxruntime-node is a day. Fine.
+- Endpointing, the hard one: deciding the person has finished. Silence timers feel robotic, too
+  short cuts people off, too long feels deaf. LiveKit and Pipecat both ended up training small
+  models on transcript context for this. Deepgram's own endpointing is a usable first cut.
+- Barge-in: detect speech during playback, cancel the TTS stream and the model stream, work out
+  how much of the sentence was actually heard, and keep the transcript honest about it.
+- Echo: the browser's acoustic echo cancellation does this for the web; a raw pipeline over PSTN
+  has to trust the carrier's.
+- Playback: chunked audio queueing on the client with a cancel path.
+- Observability: per-turn timings (speech end, first token, first audio) or latency cannot be
+  tuned.
+
+A DIY web-only engine is perhaps two weeks to acceptable and a long tail to good. It is worth
+doing only if LiveKit's shape fights us or its cost matters at scale, neither of which we know
+yet. The interface above is the insurance; Spike A is the test.
+
 ## What could kill it
 
 - The standalone-app microphone on iOS. If it fails, A degrades to "open Safari to talk", which
