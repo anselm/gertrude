@@ -285,6 +285,23 @@ for the brain. One vendor account instead of two, and the brain stays ours.
 **Keys needed before Spike A: LiveKit Cloud only** (`LIVEKIT_URL`, `LIVEKIT_API_KEY`,
 `LIVEKIT_API_SECRET`). This supersedes the key lists above.
 
+## What Boardy uses (Anselm asked; answer: not published)
+
+Nothing found names Boardy's vendors: not their site, the Creandum and TechCrunch pieces, the Unio
+"voice AI stack" listing, or any vendor case study. What his own experience tells us is still
+useful: Boardy placed a real call to his ordinary number first, and when that did not work it
+fell back to Google Meet. The first means they run outbound PSTN at volume (one profile says 300
+calls a day) and have solved labelling well enough to keep doing it. The second means a meeting
+bot: Meet has no API to speak into, so the AI joins as a participant through a headless browser,
+which is what Recall.ai, MeetingBaaS and a few others sell, or what you build with Playwright. By
+default such a bot joins Meet as an anonymous guest and must be admitted. Which vendor Boardy
+uses for either leg is unknown; I would be guessing.
+
+The pattern is worth copying even without the vendors: **phone first, a link second.** For
+Gertrude the "link" is her own LiveKit room in the web app rather than a Meet bot, which is
+cheaper, under our control, and already in Spike A. A Meet bot stays a possible later fallback
+for people who will not install anything and whose carrier blocks her.
+
 ## What could kill it
 
 - The standalone-app microphone on iOS. If it fails, A degrades to "open Safari to talk", which
