@@ -223,6 +223,43 @@ gateway with his SIM instead of a bought number, if labelling turns out to bite.
 
 **Keys now needed before Spike A:** LiveKit Cloud and Deepgram only.
 
+## Third pass (Anselm): barge-in, latency, and how the phone rings
+
+> Barge in and low latency are important. Talking to the phone via a call or an app feels good.
+> Hmm a signal call? Or Hmm. A native app would do this but it is a pain to make native apps due
+> to distribution issues.
+
+**Barge-in and latency are LiveKit's strongest suit**, which is a reason to keep it as engine one.
+From its docs today: interruption handling has an `adaptive` mode (a model decides whether the
+person is interrupting or just saying "mm-hm", Node SDK 1.2.0 or later) over the fixed
+`interruption.min_duration` of 0.5 s; endpointing is `dynamic` with a min and max delay (0.3 to
+2.5 s in their samples) driven by the end-of-utterance model; and `preemptiveGeneration` starts
+the LLM on the final transcript before the turn is confirmed, so the model's time to first token
+hides behind the endpointing delay instead of adding to it. Those three are the whole latency
+story for a cascade. Budget to measure in Spike A: speech end to STT final (~200 ms), to first
+token (400 to 800 ms, overlapped by preemption), to first audio (~150 ms for Aura-2). Target
+under a second voice to voice; under 1.5 s before anyone notices.
+
+**How she rings, option by option.**
+
+| Ring | Real ring? | Distribution | Verdict today |
+|---|---|---|---|
+| Web app + push | No: a banner with a sound, tap to pick up. Better on Android than iOS | None | Spike A. Every other option shares its agent |
+| Ordinary phone call (SIP) | Yes, on any phone | None | Spike C; the spam label is the risk |
+| WhatsApp via LiveKit's connector | Yes, through WhatsApp's own call screen | Meta business account and verification; LiveKit access request | **Parked.** Two sources say business-initiated calling is not offered to US business numbers, and permission is a template the person must accept, good for a 72-hour window; unverified against Meta, but enough to stop. User-initiated calls are free and allowed, so "call Gertrude on WhatsApp" could still work later |
+| Signal | Would be lovely | No API for calls at all; signal-cli does messages only | Out |
+| Native shell | Yes, CallKit on iOS, full-screen notification on Android | TestFlight for iOS (up to 10,000 testers, builds expire after 90 days, lighter review); APK or Play internal testing for Android | The honest answer to "ring like a call" without a carrier. Not a rewrite: Capacitor around the existing web app, plus `@capgo/capacitor-incoming-call-kit` for the call screen and a PushKit plugin for the wake-up. A week or two, plus the Apple paperwork. Decide after A and C |
+
+**A softer answer to the ring.** Gertrude is an old lady. She makes appointments. "Shall I ring
+you at four?" turns a push into something close enough to a ring: the person expects it, the
+phone is in hand, the banner says "Gertrude, as promised", and one tap opens the line. It costs
+nothing, works on every phone today, and it is in character. The nudge dispatcher already has the
+timing machinery. Spike A should include it.
+
+So: build A now, with preemption and adaptive interruption on and the timings logged per turn;
+then C to learn whether a bought number rings clean; then choose between living with
+appointments-plus-push and the native shell. WhatsApp and Signal are off the table for outbound.
+
 ## What could kill it
 
 - The standalone-app microphone on iOS. If it fails, A degrades to "open Safari to talk", which
