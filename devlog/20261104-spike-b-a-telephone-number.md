@@ -58,3 +58,17 @@ narrowband audio, and a real caller's pauses.
 - The transcriber on real phone audio; endpointing against real pauses.
 - Spam callers and wrong numbers will arrive once the number is published; the leash is the first answer, a block
   list the second.
+
+## Same night: the number on the card, and at sign-up
+
+Anselm: "how do users configure their phone number - i will do this via ux", then "lets try connect it on signup also".
+Built: `lib/phone.mjs` (E.164 normalising, attach with consent words, detach, owner lookup); `person.merge` in the store
+folds a provisional telephone person into a real one (log, leads, vouches, edges, consents, channels; the card only if the
+real one has none, so the thinker rewrites from the moved log); the card page's Form G-4 takes one number with the button
+"She may ring me here" and shows it with an off switch; the talk page asks once at sign-up ("One thing, while I have
+you"), with "not now" remembered on that browser; her `phone` tool takes a number given in conversation, their words as
+the consent, and says back only the last four digits; the person block tells her whether a number is on file and never
+to say it whole. Senders ignore telephone channels. Checked on a temp database: stranger call, then the number typed on
+the card merges the stranger's transcript into the real card, the next call from that phone is recognised with the
+longer leash, someone else's number is refused, removal revokes the consent. Not seen by eye: both forms sit behind
+sign-in.

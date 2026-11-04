@@ -11,6 +11,11 @@
   const token = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
   $effect(() => { const t = token(); if (t && !session.user) rpc("invite.peek", { token: t }).then((j) => (via = j.used ? null : j)).catch(() => { via = null; try { localStorage.removeItem(KEY); } catch {} }); });
   let events = $state([]), text = $state(""), busy = $state(false), live = $state(""), err = $state(""), box; let loadedFor = null;
+  // At sign-up, once: a telephone number, so she knows them when they ring and may ring them by appointment one day. Declining is remembered on this browser.
+  const ASKED = "gt_phone_asked"; let askPhone = $state(false), phoneDraft = $state(""), phoneErr = $state(""), phoneKept = $state("");
+  $effect(() => { if (session.user?.first) { let asked = false; try { asked = !!localStorage.getItem(ASKED); } catch {} askPhone = !asked; } });
+  const phoneDone = () => { askPhone = false; try { localStorage.setItem(ASKED, "1"); } catch {} };
+  async function keepPhone() { phoneErr = ""; try { const j = await rpc("phone.set", { number: phoneDraft, said: "You may ring me on this number (given at sign-up)" }); phoneKept = j.phone; phoneDone(); } catch (e) { phoneErr = e.message; } }
   async function load() { try { const j = await rpc("talk.history", { invite: token() }); events = j.events; err = ""; if (j.via || token()) { try { localStorage.removeItem(KEY); } catch {} if (/^\/(i|from)\//.test(location.pathname)) history.replaceState(null, "", "/"); } } catch (e) { err = e.message; } scroll(); }
   $effect(() => { if (session.user && loadedFor !== session.user.id) { loadedFor = session.user.id; load(); } });
   const off = on("token", (t) => { live += t; scroll(); }); $effect(() => () => off());
@@ -46,6 +51,15 @@
     {#if err}<p class="type text-[13px] text-brand" role="alert">✗ {err}</p>{/if}
     {#if events.length >= 4 && !busy}<Install /><p class="type mt-2 text-[11px] text-dim">☞ She has suggestions now and then. <a class="text-brand" href="/card">Let her reach you</a>, if you like.</p>{/if}
   </div>
+  {#if askPhone && session.user}
+    <div class="card plain mt-3 !pb-3" style="border-top-color: var(--color-avocado)">
+      <p class="head pt-1">One thing, while I have you</p>
+      <p class="body mt-1 text-dim">If you give me your telephone number I'll know it's you when you ring me, and one day I may ring you, by appointment only. It stays on your card, and you can take it off any time.</p>
+      <div class="mt-2 flex flex-wrap items-baseline gap-2"><input bind:value={phoneDraft} type="tel" inputmode="tel" autocomplete="tel" placeholder="your number" class="flex-1 min-w-[10rem] text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && keepPhone()} /><button class="btn primary" disabled={!phoneDraft.trim()} onclick={keepPhone}>☞ Keep it</button><button class="type text-[12px] text-dim" onclick={phoneDone}>not now</button></div>
+      {#if phoneErr}<p class="type mt-1 text-[12px]" style="color: var(--color-rust)">{phoneErr}</p>{/if}
+    </div>
+  {/if}
+
   {#if line.status !== "idle"}
     <div class="fixed inset-x-0 bottom-0 z-20 bg-paper px-4 double pb-[max(env(safe-area-inset-bottom),12px)] pt-2" role="status" aria-live="polite">
       <div class="mx-auto max-w-3xl pr-12 md:pr-0">

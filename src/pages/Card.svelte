@@ -1,7 +1,7 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte"; import * as push from "../lib/push.js"; import Install from "../lib/Install.svelte";
-  let myIntros = $state([]); let channels = $state([]), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]), cad = $state({ nudge_days: 7, quiet_from: 21, quiet_to: 8 });
-  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; placeName = j.place; myNudges = j.nudges; cad = j.cadence; myIntros = (await rpc("intros.list")).intros; } catch {} }
+  let myIntros = $state([]); let channels = $state([]), phoneOn = $state(null), phoneDraft = $state(""), phoneErr = $state(""), placeName = $state(""), topic = $state(""), reach = $state(""), myNudges = $state([]), cad = $state({ nudge_days: 7, quiet_from: 21, quiet_to: 8 });
+  async function loadChannels() { try { const j = await rpc("channel.list"); channels = j.channels; phoneOn = j.phone || null; placeName = j.place; myNudges = j.nudges; cad = j.cadence; myIntros = (await rpc("intros.list")).intros; } catch {} }
   const CAD = [[0, "never"], [1, "daily at most"], [7, "weekly at most"], [14, "fortnightly"], [30, "monthly"]];
   async function saveCad() { try { cad = await rpc("cadence.set", cad); reach = "noted"; } catch (e) { reach = e.message; } }
   async function pushOn() { reach = "asking…"; try { await push.enable(); reach = "on"; await loadChannels(); } catch (e) { reach = e.message; } }
@@ -16,6 +16,9 @@
   async function copy(link, id) { try { await navigator.clipboard.writeText(link); copied = id; setTimeout(() => (copied = ""), 1500); } catch { prompt("copy this link", link); } }
   // Send the invitation yourself: the phone's share sheet (Messages, WhatsApp, mail) with a note from her; copy as the fallback.
   const note = (l) => `${l.name}, this is ${person?.name || "a friend"}. There's a digital person called Gertrude who connects people in Portland; I told her you ought to talk. She's a program, she keeps notes you can read and delete, and she'll only know I sent you. Say hello: ${l.link}`;
+  // The telephone: one number, given with a sentence that stands as consent; removable.
+  async function setPhone() { phoneErr = ""; try { const j = await rpc("phone.set", { number: phoneDraft, said: "You may ring me on this number (typed on the card page)" }); phoneOn = j.phone; phoneDraft = ""; if (j.merged) reach = "your earlier telephone conversation is now in your transcript"; } catch (e) { phoneErr = e.message; } }
+  async function clearPhone() { try { await rpc("phone.clear"); phoneOn = null; } catch (e) { phoneErr = e.message; } }
   // Your standing link, with a note in your own name; the share sheet where there is one, the clipboard otherwise.
   async function shareLink() { const text = `${person?.name || "A friend"} here. Gertrude introduces people around Portland; she is a program, not a person, and I have vouched for you with her. Say hello to her here: ${vouches.link}`; if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e?.name === "AbortError") return; } } copy(text, "vouchlink"); }
   async function send(l) { if (navigator.share) { try { await navigator.share({ text: note(l) }); return; } catch (e) { if (e?.name === "AbortError") return; } } copy(note(l), l.id); }
@@ -88,6 +91,11 @@
     </div>
     <Install />
     {#if channels.length}<table class="type mt-2 w-full text-[13px]"><tbody>{#each channels as c}<tr class="hair"><td class="py-1">{c.kind === "webpush" ? "notifications" : c.kind} · {c.label}</td><td class="text-dim text-[11px]">{c.last_sent ? "last " + when(c.last_sent) : "never used"}{c.failures ? " · " + c.failures + " failed" : ""}</td><td class="text-right"><button class="chip" onclick={() => (c.kind === "webpush" ? pushOff(c.id) : dropChannel(c.id))}>✗ off</button></td></tr>{/each}</tbody></table>{/if}
+    <div class="mt-3 flex flex-wrap items-baseline gap-2"><span class="type text-[11px] uppercase tracking-[0.08em] text-dim">Telephone</span>
+      {#if phoneOn}<span class="type text-[13px]">{phoneOn}</span><span class="type text-[11px] text-dim">she knows you when you ring her, and may ring you by appointment once she can</span><button class="chip" onclick={clearPhone}>✗ off</button>
+      {:else}<input bind:value={phoneDraft} type="tel" inputmode="tel" autocomplete="tel" placeholder="your number" class="flex-1 min-w-[10rem] text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && setPhone()} /><button class="btn" disabled={!phoneDraft.trim()} onclick={setPhone}>☞ She may ring me here</button>{/if}
+    </div>
+    {#if phoneErr}<p class="type mt-1 text-[12px]" style="color: var(--color-rust)">{phoneErr}</p>{/if}
     <div class="mt-3 flex items-baseline gap-2"><span class="type text-[11px] uppercase tracking-[0.08em] text-dim">ntfy topic</span><input bind:value={topic} placeholder="if you use ntfy.sh" class="flex-1 text-[13px] !py-1" onkeydown={(e) => e.key === "Enter" && ntfyOn()} /><button class="btn" disabled={!topic.trim()} onclick={ntfyOn}>Add</button></div>
     <div class="hair mt-3"></div>
     <div class="mt-2 flex flex-wrap items-baseline gap-2"><span class="type text-[11px] uppercase tracking-[0.08em] text-dim">Where you are</span>{#if placeName}<span class="type text-[13px]">near {placeName}</span><button class="chip" onclick={forgetPlace}>✗ forget</button>{:else}<button class="btn" onclick={sharePlace}>☞ Share roughly where you are</button><span class="type text-[11px] text-dim">kept to about a kilometre, so she can think of nearby people and places</span>{/if}</div>
