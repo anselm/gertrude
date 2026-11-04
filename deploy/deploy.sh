@@ -5,9 +5,9 @@ set -euo pipefail
 VM="${1:-${VM:-gertrude}}"; HOST="$VM.exe.xyz"; DEST="exedev@$HOST"; ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SSH="ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR -o ServerAliveInterval=5 -o ServerAliveCountMax=3"
 echo "› sync → $HOST:/srv/gertrude"
-rsync -ah --delete -e "$SSH" --exclude '.git' --exclude 'node_modules' --exclude 'dist' --exclude '.env' --exclude 'data' --exclude 'deploy' "$ROOT/" "$DEST:/srv/gertrude/"
+rsync -ah --delete -e "$SSH" --exclude '.git' --exclude 'node_modules' --exclude 'dist' --exclude '.env' --exclude 'data' --exclude 'deploy' --exclude 'packages/*/node_modules' "$ROOT/" "$DEST:/srv/gertrude/"
 echo "› npm ci + build"
 $SSH "$DEST" 'set -o pipefail; cd /srv/gertrude && npm ci --no-audit --no-fund --silent 2>&1 | tail -1; npm run build > /tmp/build.log 2>&1 || { echo "BUILD FAILED"; grep -iE "error|unexpected" /tmp/build.log | head -5; exit 1; }; grep -E "built in" /tmp/build.log' || { echo "✗ build failed on $HOST; not restarting"; exit 1; }
 VERSION="$(node -p "require('$ROOT/package.json').version")"; SHA="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo manual)"; git -C "$ROOT" diff --quiet 2>/dev/null || SHA="$SHA-dirty"
-$SSH "$DEST" "printf '{\"version\":\"%s\",\"sha\":\"%s\",\"at\":\"%s\"}\n' '$VERSION' '$SHA' \"\$(date -u +%Y-%m-%dT%H:%MZ)\" > /srv/gertrude/dist/version.json; sudo systemctl restart gertrude; sleep 2; systemctl is-active gertrude; journalctl -u gertrude -n 3 --no-pager -o cat"
+$SSH "$DEST" "printf '{\"version\":\"%s\",\"sha\":\"%s\",\"at\":\"%s\"}\n' '$VERSION' '$SHA' \"\$(date -u +%Y-%m-%dT%H:%MZ)\" > /srv/gertrude/dist/version.json; sudo systemctl restart gertrude; systemctl is-enabled gertrude-voice >/dev/null 2>&1 && sudo systemctl restart gertrude-voice; sleep 2; systemctl is-active gertrude; systemctl is-enabled gertrude-voice >/dev/null 2>&1 && systemctl is-active gertrude-voice; journalctl -u gertrude -n 3 --no-pager -o cat"
 echo "✓ deployed $SHA → https://$HOST"

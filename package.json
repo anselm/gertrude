@@ -2,6 +2,7 @@
   "name": "gertrude",
   "private": true,
   "type": "module",
+  "workspaces": ["packages/*"],
   "version": "0.1.0",
   "description": "Gertrude: a digital person who brokers people. Talk, walk, filter, match.",
   "license": "MIT",
@@ -9,7 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node server/index.mjs",
-    "test": "node scripts/store-test.mjs && node scripts/dup-test.mjs && node scripts/names-test.mjs", "test:live": "node scripts/talk-test.mjs && node scripts/settings-test.mjs && node scripts/nudge-test.mjs && node scripts/match-test.mjs"
+    "test": "node scripts/store-test.mjs && node scripts/dup-test.mjs && node scripts/names-test.mjs",
+    "test:live": "node scripts/talk-test.mjs && node scripts/settings-test.mjs && node scripts/nudge-test.mjs && node scripts/match-test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
@@ -21,6 +23,7 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
     "@tailwindcss/vite": "^4.3.3",
+    "livekit-client": "^2.23.0",
     "socket.io-client": "^4.8.3",
     "svelte": "^5.57.0",
     "tailwindcss": "^4.3.3",

@@ -1,6 +1,6 @@
 <script>
   import { session } from "../lib/session.svelte.js"; import { rpc, on, when } from "../lib/api.js"; import SignIn from "../lib/SignIn.svelte";
-  import { tick } from "svelte"; import { route } from "../lib/router.svelte.js"; import Install from "../lib/Install.svelte"; import { describe } from "../lib/install.svelte.js";
+  import { tick } from "svelte"; import { route } from "../lib/router.svelte.js"; import Install from "../lib/Install.svelte"; import { describe } from "../lib/install.svelte.js"; import { line, open as pickUp, hangup, clock } from "../lib/line.svelte.js";
   // ?demo shows a sample transcript without signing in, so the look can be checked and shared.
   const DEMO = [{ id: "d1", dir: "out", text: "Hello, I'm Gertrude. I should say straight away that I'm a digital person, a program, run by Anselm Hook here in Portland as a public service. I talk to people, I keep notes you can read and delete, and when I think two people ought to meet I ask them both first. So, what are you up to these days?", ts: "2026-10-27T18:00:00Z", channel: "web" }, { id: "d2", dir: "in", text: "Mostly fixing up an old sailboat and trying to find someone who knows diesel engines.", ts: "2026-10-27T18:01:00Z", channel: "web" }, { id: "d3", dir: "out", text: "A sailboat. What sort, and where does she live? And is it the engine that is beating you, or the finding of a person?", ts: "2026-10-27T18:01:20Z", channel: "web" }];
   const demo = $derived(route.q.has("demo"));
@@ -22,6 +22,7 @@
     try { const out = await rpc("talk.say", { text: t, cid, device: describe() }, 120000); sending = false; events = events.map((e) => e.id === "tmp-" + cid ? { ...e, pending: false } : e); if (out?.id !== "pending") events = [...events, out]; }
     catch (e) { err = e.message + " — your message was not sent"; events = events.filter((e) => e.id !== "tmp-" + cid); text = t; }
     finally { offTok(); live = ""; busy = false; sending = false; scroll(); } }
+  let wasOpen = false; $effect(() => { if (line.status === "open") wasOpen = true; else if (wasOpen && line.status === "idle") { wasOpen = false; load(); } });
   const parts = (t) => String(t).split(/(https?:\/\/[^\s)]+)/g).map((x, i) => ({ x, link: i % 2 === 1 }));
   function key(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }
 </script>
@@ -44,10 +45,21 @@
     {#if err}<p class="type text-[13px] text-brand" role="alert">✗ {err}</p>{/if}
     {#if events.length >= 4 && !busy}<Install /><p class="type mt-2 text-[11px] text-dim">☞ She has suggestions now and then. <a class="text-brand" href="/card">Let her reach you</a>, if you like.</p>{/if}
   </div>
+  {#if line.status !== "idle"}
+    <div class="fixed inset-x-0 bottom-0 z-20 bg-paper px-4 double pb-[max(env(safe-area-inset-bottom),12px)] pt-2" role="status" aria-live="polite">
+      <div class="mx-auto max-w-3xl pr-12 md:pr-0">
+        <div class="flex items-baseline gap-3 type text-[13px]"><span class="head">{line.status === "connecting" ? "Ringing…" : "Line open"}</span>{#if line.status === "open"}<span class="text-dim tabular-nums">{clock(line.seconds)}</span><span class="text-dim">· she is {line.her || "listening"}</span>{/if}<button class="btn ml-auto h-[30px]" onclick={hangup}>Hang up</button></div>
+        {#each line.captions.slice(-2) as c (c.id)}<p class="type mt-1 text-[13px] {c.who === 'her' ? '' : 'text-dim'}"><span class="text-dim">{c.who === "her" ? "Gertrude: " : "You: "}</span>{c.text}</p>{/each}
+      </div>
+    </div>
+  {:else}
   <form class="fixed inset-x-0 bottom-0 z-20 bg-paper px-4 double pb-[max(env(safe-area-inset-bottom),12px)] pt-2" onsubmit={(e) => { e.preventDefault(); send(); }}>
     <div class="mx-auto flex max-w-3xl items-end gap-2 pr-12 md:pr-0">
       <textarea bind:this={box} bind:value={text} onkeydown={key} rows="1" placeholder="say something to Gertrude" class="min-h-[38px] max-h-40 flex-1 resize-none" aria-label="your message"></textarea>
       <button class="btn primary h-[38px]" disabled={busy || !text.trim()} aria-label="send">{busy ? "…" : "Send"}</button>
+      <button type="button" class="btn h-[38px] !px-2.5" disabled={busy} aria-label="ring Gertrude" title="Talk to her out loud" onclick={pickUp}>☏</button>
     </div>
+    {#if line.err}<p class="type mt-1 text-[12px] text-brand" role="alert">✗ {line.err}</p>{/if}
   </form>
+  {/if}
 {/if}
