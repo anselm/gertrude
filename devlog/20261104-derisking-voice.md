@@ -165,6 +165,64 @@ A DIY web-only engine is perhaps two weeks to acceptable and a long tail to good
 doing only if LiveKit's shape fights us or its cost matters at scale, neither of which we know
 yet. The interface above is the insurance; Spike A is the test.
 
+## Second pass (Anselm, same evening): Deepgram, the Android phone, cheap voices
+
+> Livekit seems like a good piece. I feel like piping to Claude is a concern - what if we go to
+> deepgram? I do have an ordinary android phone with a real number - in developer mode - does that
+> help? Voice output quality is less critical I don't need eleven labs for voice output.
+
+**Deepgram for both ears and mouth.** Yes. Deepgram Nova-3 for streaming STT and Aura-2 for TTS
+($0.030 per 1,000 characters, roughly $0.03 a minute of speech) are both in the Agents JS plugin
+table, so the vendor list drops to LiveKit and Deepgram. Aura-2 is a plain, clear voice; it will
+not do an old lady with character the way a designed ElevenLabs or Cartesia voice would. His call
+is that this does not matter yet, and the TTS plugin is one line to swap later.
+
+**Deepgram's own Voice Agent API** is the thing that would replace LiveKit's orchestration rather
+than Claude. It is one websocket that does VAD, endpointing, barge-in, STT and TTS, and its
+"think" step accepts Anthropic as a provider or any OpenAI-compatible endpoint, with functions
+that call back to the client. So Claude stays the brain either way; what changes is who runs the
+turn loop. Two reasons not to start there: phones would need a bridge from LiveKit SIP into the
+Deepgram websocket that we would write ourselves, and with Deepgram running the loop, Gertrude's
+talker (cached persona block, tools, log, thinker) would have to be re-expressed as a Deepgram
+prompt plus callbacks, or hidden behind an OpenAI-compatible shim of our own. Behind the package
+interface it is a clean engine two if LiveKit disappoints; it is not engine one. Per-minute
+pricing for bring-your-own-LLM was not findable on an official page today.
+
+**"Piping to Claude" as a risk.** The pipe itself is not the problem; the talker already
+streams. The cost is the time to first token, which is the largest piece of voice-to-voice latency
+we control. Mitigations, in order: a short first sentence from the persona ("Well now.") so TTS
+starts at once; Haiku 5.5 for voice turns with the thinker on Sonnet afterwards, measured against
+Sonnet before deciding; the persona block already cached; and starting TTS on the first clause,
+which Agents JS does by default. If after Spike A the first token is still over 800 ms, that is
+when to look at Deepgram's hosted think step or a smaller model for the first beat only.
+
+**The Android phone with a real number.** It helps, but not the way one would hope.
+
+- What it is good for: SMS, as planned (SMS Gateway for Android, no 10DLC), and as an *identity*:
+  a real mobile number with history that people can save as a contact and that carriers are far
+  less likely to label. That is worth a lot for the "she calls you" ideal.
+- What it cannot do: hand us the call audio. Android reserves the `VOICE_CALL`, `VOICE_UPLINK`
+  and `VOICE_DOWNLINK` capture sources for system apps (`CAPTURE_AUDIO_OUTPUT`); developer mode
+  and adb do not change that. adb can dial and answer; it cannot listen or speak.
+- Two ways to get a real SIM onto the pipeline anyway, both untested by me:
+  1. **An LTE-to-SIP gateway box** (a single-SIM VoIP gateway, in the hundred-to-two-hundred-dollar
+     range, I believe; brand and price unverified) with his SIM in it, registered as a SIP trunk in
+     LiveKit. Calls then go out and come in on the real number through the same agent as
+     everything else. This is the sane version.
+  2. **The Bluetooth headset trick**: a Linux box pairs with the phone as a hands-free unit
+     (PipeWire's native HFP backend can take the hands-free role, I believe), so the call audio
+     arrives as an 8 or 16 kHz SCO stream, and adb places the call. Kludgy, single call at a time,
+     and the box has to sit next to the phone; a weekend hack, not a service.
+- Either way the carrier's consumer terms may forbid automated calling on that line; read them
+  before it carries anything but his own test calls. TCPA applies to the called party regardless
+  of where the call originates.
+
+So the phone is the SMS channel and the number people save; for voice it is a possible trunk via
+a gateway box, not a media device. Spikes A and B are unchanged. Spike C gains an option: the
+gateway with his SIM instead of a bought number, if labelling turns out to bite.
+
+**Keys now needed before Spike A:** LiveKit Cloud and Deepgram only.
+
 ## What could kill it
 
 - The standalone-app microphone on iOS. If it fails, A degrades to "open Safari to talk", which
@@ -178,8 +236,8 @@ yet. The interface above is the insurance; Spike A is the test.
 ## What Anselm has to do before Spike A
 
 Create accounts and drop keys in `/etc/gertrude.env`: LiveKit Cloud (`LIVEKIT_URL`,
-`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`), Deepgram (`DEEPGRAM_API_KEY`), Cartesia
-(`CARTESIA_API_KEY`). All three have free tiers. Everything else is code.
+`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`) and Deepgram (`DEEPGRAM_API_KEY`), which now covers both
+STT and TTS (second pass below). Both have free tiers. Everything else is code.
 
 ## Sources read today
 
