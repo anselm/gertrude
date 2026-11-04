@@ -77,3 +77,16 @@ sailors around Portland?". Against a scratch database with a short invented hist
 3. Preemptive generation once the brain can roll back a turn (log on commit, not on start).
 4. "Shall I ring you at four?": the appointment tool and the push that opens the line.
 5. Spike B: the free US number routed to the same worker.
+
+## Later the same day: the slow first turn, explained
+
+The ledger had the answer. The warm-up call at line open sent no tools; the real turn sends her tools, and tools sit ahead of
+the system prompt in the prompt-cache prefix. So the warm wrote a cache the first turn could not read: the first voice row
+shows `cached=0` and a 3.5 s start, the second shows 4056 cached tokens and 1.5 s. Fix: the warm sends the same tools.
+Checked on the scratch database: warm, then a first turn with 4056 cached and 1.45 s to first token.
+
+Not Ollama, for the record: the brain is Sonnet 5.5 over the Anthropic API from the start; no local model is in the path.
+What remains per turn with a cache hit is roughly end-of-turn detection (0.5–2 s), Sonnet's first token (~1.5 s), Deepgram's
+first audio (0.2 s). The next levers, in order: preemptive generation (start the brain on the interim transcript, before the
+end of turn is declared; needs the brain to log on commit, not on start), endpointing delays, a rules layer in front for
+the shapes that need no model (goodbye, say that again, hold on, STOP, the opener), and Haiku for the shortest turns.
