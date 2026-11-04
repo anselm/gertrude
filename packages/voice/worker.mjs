@@ -24,7 +24,10 @@
 import { defineAgent, voice, inference, llm } from "@livekit/agents";
 import * as silero from "@livekit/agents-plugin-silero";
 const UNKNOWN = "I'm sorry, I don't know who this is, and I only talk to people I've met. Do sign in on my page first.";
-export function defineVoiceAgent({ brain, stt = "deepgram/nova-3", tts = "deepgram/aura-2:athena", language = "en", endpointing = { minDelay: 450, maxDelay: 2000 }, turnHandling = {}, placeholderLlm = "openai/gpt-5-mini", log = console }) {
+// A telephone is a microphone open to the whole room: the person's companions, a television, the street. So on calls that
+// arrive by telephone she yields only to a longer, wordier interruption and waits a little longer before taking a turn.
+const PHONE_TURNS = { interruption: { minDuration: 900, minWords: 2 }, endpointing: { minDelay: 600, maxDelay: 2500 } };
+export function defineVoiceAgent({ brain, stt = "deepgram/nova-3", tts = "deepgram/aura-2:athena", language = "en", endpointing = { minDelay: 450, maxDelay: 2000 }, phoneTurnHandling = PHONE_TURNS, turnHandling = {}, placeholderLlm = "openai/gpt-5-mini", log = console }) {
   return defineAgent({
     prewarm: async (proc) => { proc.userData.vad = await silero.VAD.load(); },
     entry: async (ctx) => {
@@ -38,7 +41,7 @@ export function defineVoiceAgent({ brain, stt = "deepgram/nova-3", tts = "deepgr
         // The session insists on an LLM to schedule replies; the brain answers through llmNode below, so this one is never called.
         llm: new inference.LLM({ model: placeholderLlm }),
         // Adaptive interruption is a paid knob in production; the VAD mode is what runs there.
-        turnHandling: { endpointing, ...turnHandling },
+        turnHandling: { endpointing, ...(call.phone ? phoneTurnHandling : {}), ...turnHandling },
       });
       const agent = voice.Agent.create({
         instructions: "(the brain speaks for itself)",

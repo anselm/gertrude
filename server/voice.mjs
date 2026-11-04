@@ -8,5 +8,6 @@
 import "../lib/env.mjs"; import { fileURLToPath } from "node:url"; import { cli, ServerOptions } from "@livekit/agents"; import { defineVoiceAgent } from "@gertrude/voice/worker"; import { brain } from "../lib/voice-brain.mjs";
 const n = (v, d) => (Number.isFinite(+v) && +v > 0 ? +v : d);
 export default defineVoiceAgent({ brain, stt: process.env.VOICE_STT || "deepgram/nova-3", tts: process.env.VOICE_TTS || "deepgram/aura-2:theia",
-  endpointing: { minDelay: n(process.env.VOICE_EOU_MIN, 450), maxDelay: n(process.env.VOICE_EOU_MAX, 2000) } });
+  endpointing: { minDelay: n(process.env.VOICE_EOU_MIN, 450), maxDelay: n(process.env.VOICE_EOU_MAX, 2000) },
+  phoneTurnHandling: { interruption: { minDuration: n(process.env.VOICE_PHONE_BARGE_MS, 900), minWords: n(process.env.VOICE_PHONE_BARGE_WORDS, 2) }, endpointing: { minDelay: n(process.env.VOICE_PHONE_EOU_MIN, 600), maxDelay: n(process.env.VOICE_PHONE_EOU_MAX, 2500) } } });
 cli.runApp(new ServerOptions({ agent: fileURLToPath(import.meta.url) }));
