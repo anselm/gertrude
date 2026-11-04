@@ -260,6 +260,31 @@ So: build A now, with preemption and adaptive interruption on and the timings lo
 then C to learn whether a bought number rings clean; then choose between living with
 appointments-plus-push and the native shell. WhatsApp and Signal are off the table for outbound.
 
+## Fourth pass (Anselm): "Why use Deepgram if LiveKit does barge-in?"
+
+Because barge-in and transcription are different jobs, and it turns out LiveKit sells both.
+LiveKit's agent framework does the *conversation mechanics*: who is talking, when they stopped,
+whether a noise was an interruption, cutting the speech off cleanly. It does not turn sound into
+words or words into sound; those are models, and someone has to host them. That was Deepgram's
+job in the plan above.
+
+But **LiveKit Inference** hosts those models itself, under the same LiveKit key, with no plugin
+and no second account: Deepgram's Nova-3 and Flux, AssemblyAI, Cartesia, Speechmatics for STT;
+Deepgram Aura-2, Cartesia, Rime, Inworld, Fish Audio and others for TTS. It works from the Node
+SDK (`inference.STT`, `inference.TTS` in `@livekit/agents`), the Build tier includes $2.50 of
+credit (about 50 minutes), and the turn-detection and interruption models are free. Prices read
+today: Deepgram Nova-3 at $0.0048 a minute, Deepgram Flux (built for conversational turn-taking,
+with end-of-turn inside the model) at $0.0065, Aura-2 at $30 per million characters, so about
+three cents a minute of speech. Swapping voices or transcribers becomes a string, which is
+exactly what we want while we are still finding out what she sounds like.
+
+What Inference does **not** have is Claude. Its LLM list is OpenAI, Google, xAI, DeepSeek, Kimi.
+So the shape becomes: LiveKit for transport, turn-taking and the speech models; our own adapter
+for the brain. One vendor account instead of two, and the brain stays ours.
+
+**Keys needed before Spike A: LiveKit Cloud only** (`LIVEKIT_URL`, `LIVEKIT_API_KEY`,
+`LIVEKIT_API_SECRET`). This supersedes the key lists above.
+
 ## What could kill it
 
 - The standalone-app microphone on iOS. If it fails, A degrades to "open Safari to talk", which
@@ -272,15 +297,16 @@ appointments-plus-push and the native shell. WhatsApp and Signal are off the tab
 
 ## What Anselm has to do before Spike A
 
-Create accounts and drop keys in `/etc/gertrude.env`: LiveKit Cloud (`LIVEKIT_URL`,
-`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`) and Deepgram (`DEEPGRAM_API_KEY`), which now covers both
-STT and TTS (second pass below). Both have free tiers. Everything else is code.
+Create a LiveKit Cloud account and drop its keys in `/etc/gertrude.env` (`LIVEKIT_URL`,
+`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`). Speech models come through LiveKit Inference on the same
+key (fourth pass below), so no Deepgram account is needed. Everything else is code.
 
 ## Sources read today
 
 - Anthropic cookbook, low-latency voice with ElevenLabs: https://platform.claude.com/cookbook/third-party-elevenlabs-low-latency-stt-claude-tts
 - Claude voice mode is a pipeline (alphasignal, July 2026): https://alphasignal.ai/news/anthropic-s-claude-opus-finally-powers-voice-mode-with-real-tool-access
-- LiveKit pricing: https://livekit.com/pricing
+- LiveKit pricing: https://livekit.com/pricing and https://livekit.com/pricing/inference
+- LiveKit Inference models: https://docs.livekit.io/agents/models/inference.md
 - LiveKit outbound calls (Node): https://docs.livekit.io/telephony/making-calls/outbound-calls.md
 - LiveKit SIP trunk setup: https://docs.livekit.io/telephony/start/sip-trunk-setup.md
 - LiveKit Agents JS repo and plugin table: https://github.com/livekit/agents-js
